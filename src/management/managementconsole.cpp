@@ -1,7 +1,10 @@
 #include <management/managementconsole.hpp>
 
 #include <utility/logging.hpp>
+#include <utility/rapidjsonconfigmanager.hpp>
 #include <serverlifecycle.hpp>
+
+#include <reflection/magic.hpp>
 
 #include <rapidjson/document.h>
 #include <rapidjson/writer.h>
@@ -15,8 +18,6 @@ namespace agdg {
 	using websocketpp::connection_hdl;
 	using websocketpp::lib::placeholders::_1;
 	using websocketpp::lib::placeholders::_2;
-
-	enum { kConfigManagementPort = 9001 };
 
 	class ManagementConsoleSession {
 	public:
@@ -72,6 +73,10 @@ namespace agdg {
 
 	class ManagementConsole : public IManagementConsole {
 	public:
+		ManagementConsole(const rapidjson::Value& d) {
+			configure(*this, d);
+		}
+
 		virtual void Init() override {
 			server.init_asio();
 
@@ -80,7 +85,7 @@ namespace agdg {
 			server.set_open_handler(bind(&ManagementConsole::OnOpen, this, _1));
 			server.set_validate_handler(bind(&ManagementConsole::ValidateHandler, this, _1));
 
-			server.listen(kConfigManagementPort);
+			server.listen(listenPort);
 			server.start_accept();
 		}
 
@@ -137,8 +142,15 @@ namespace agdg {
 
 		std::thread thread;
 		Server server;
+
+		int listenPort;
+
+		REFL_BEGIN("ManagementConsole", 1)
+			REFL_MUST_CONFIG(listenPort)
+		REFL_END
 	};
 
-	static ManagementConsole s_mgmtConsole;
-	IManagementConsole* g_mgmtConsole = &s_mgmtConsole;
+	IManagementConsole* IManagementConsole::Create(const rapidjson::Value& config) {
+		return new ManagementConsole(config);
+	}
 }

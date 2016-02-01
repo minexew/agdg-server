@@ -1,0 +1,13 @@
+{
+  "services": {
+    "management_console": {
+      "class": "IManagementConsole",
+      "listenPort": "9001"
+    },
+    "login": {
+      "class": "ILoginServer",
+      "listenPort": "9002",
+      "realms": [{"name": "AGDQ MMO Test", "url": "ws://localhost:9003"}]
+    }
+  }
+}

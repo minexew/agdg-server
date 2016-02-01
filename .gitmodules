@@ -7,3 +7,6 @@
 [submodule "dependencies/rapidjson"]
 	path = dependencies/rapidjson
 	url = https://github.com/miloyip/rapidjson.git
+[submodule "dependencies/reflector"]
+	path = dependencies/reflector
+	url = https://github.com/minexew/reflector.git

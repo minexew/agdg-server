@@ -1,12 +1,12 @@
 #pragma once
 
-namespace agdg {
-	class IManagementConsole {
-	public:
-		virtual void Init() = 0;
-		virtual void Start() = 0;
-		virtual void Stop() = 0;
-	};
+#include <agdg/service.hpp>
 
-	extern IManagementConsole* g_mgmtConsole;
+#include <rapidjson/document.h>
+
+namespace agdg {
+	class IManagementConsole : public IService {
+	public:
+		static IManagementConsole* Create(const rapidjson::Value& config);
+	};
 }
