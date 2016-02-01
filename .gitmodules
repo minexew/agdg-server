@@ -1,0 +1,9 @@
+[submodule "dependencies/asio"]
+	path = dependencies/asio
+	url = https://github.com/chriskohlhoff/asio.git
+[submodule "dependencies/websocketpp"]
+	path = dependencies/websocketpp
+	url = https://github.com/zaphoyd/websocketpp.git
+[submodule "dependencies/rapidjson"]
+	path = dependencies/rapidjson
+	url = https://github.com/miloyip/rapidjson.git
