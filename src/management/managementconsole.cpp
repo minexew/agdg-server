@@ -152,7 +152,7 @@ namespace agdg {
 		REFL_END
 	};
 
-	IManagementConsole* IManagementConsole::Create(const rapidjson::Value& config) {
+	IManagementConsole* IManagementConsole::Create(const std::string& serviceName, const rapidjson::Value& config) {
 		return new ManagementConsole(config);
 	}
 }

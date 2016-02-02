@@ -4,6 +4,8 @@
 
 #include <fstream>
 
+// TODO: migrate off fopen
+
 namespace agdg {
 	static void s_CopyFile(const char* srcName, const char* dstName) {
 		std::ifstream src(srcName, std::ios::binary);
@@ -53,6 +55,8 @@ namespace agdg {
 			char buffer[4096];
 			rapidjson::FileReadStream stream(f, buffer, sizeof(buffer));
 			d.ParseStream(stream);
+
+			fclose(f);
 
 			if (d.GetParseError() != rapidjson::kParseErrorNone)
 				throw std::runtime_error((std::string) "syntax error in config file " + fileName);

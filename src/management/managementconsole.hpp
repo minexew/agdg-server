@@ -7,6 +7,6 @@
 namespace agdg {
 	class IManagementConsole : public IService {
 	public:
-		static IManagementConsole* Create(const rapidjson::Value& config);
+		static IManagementConsole* Create(const std::string& serviceName, const rapidjson::Value& config);
 	};
 }

@@ -1,8 +1,10 @@
 #include <login/loginserver.hpp>
 
 #include <agdg/config.hpp>
+#include <db/db.hpp>
 #include <utility/logging.hpp>
 #include <utility/rapidjsonconfigmanager.hpp>
+#include <utility/rapidjsonutils.hpp>
 #include <websocketpp_configuration.hpp>
 
 #include <reflection/basic_templates.hpp>
@@ -27,9 +29,61 @@ namespace agdg {
 	typedef Server::connection_ptr connection_ptr;
 	typedef Server::message_ptr message_ptr;
 
+	struct Realm {
+		std::string name, url;
+
+		REFL_BEGIN("LoginServer.Realm", 1)
+			REFL_MUST_CONFIG(name)
+			REFL_MUST_CONFIG(url)
+			REFL_END
+	};
+
 	class LoginProtocol {
 	public:
-		static void SendHello(connection_ptr con, const std::string& serverName) {
+		LoginProtocol(connection_ptr con) : con(con) {}
+
+		void SendError(const std::string& error) {
+			rapidjson::StringBuffer s;
+			rapidjson::Writer<rapidjson::StringBuffer> writer(s);
+
+			writer.StartObject();
+			writer.String("type");
+			writer.String("error");
+			writer.String("error");
+			writer.String(error.c_str(), error.size());
+			writer.EndObject();
+
+			con->send(s.GetString());
+		}
+
+		void SendLoginSuccess(const std::string& token, const std::vector<Realm>& realms) {
+			rapidjson::StringBuffer s;
+			rapidjson::Writer<rapidjson::StringBuffer> writer(s);
+
+			writer.StartObject();
+			writer.String("type");
+			writer.String("success");
+			writer.String("token");
+			writer.String(token.c_str(), token.size());
+			writer.String("realms");
+			writer.StartArray();
+
+			for (const auto& realm : realms) {
+				writer.StartObject();
+				writer.String("name");
+				writer.String(realm.name.c_str(), realm.name.size());
+				writer.String("url");
+				writer.String(realm.url.c_str(), realm.url.size());
+				writer.EndObject();
+			}
+
+			writer.EndArray();
+			writer.EndObject();
+
+			con->send(s.GetString());
+		}
+
+		void SendHello(const std::string& serverName) {
 			rapidjson::StringBuffer s;
 			rapidjson::Writer<rapidjson::StringBuffer> writer(s);
 
@@ -43,7 +97,7 @@ namespace agdg {
 			con->send(s.GetString());
 		}
 
-		static void SendReject(connection_ptr con, int expectedVersion) {
+		void SendReject(int expectedVersion) {
 			rapidjson::StringBuffer s;
 			rapidjson::Writer<rapidjson::StringBuffer> writer(s);
 
@@ -56,26 +110,32 @@ namespace agdg {
 
 			con->send(s.GetString());
 		}
+
+	private:
+		connection_ptr con;
 	};
 
 	class LoginSession {
 	public:
-		LoginSession(LoginServer* server, connection_ptr con) : server(server), con(con) {}
+		LoginSession(LoginServer* server, connection_ptr con) : server(server), con(con), protocol(con) {}
 
 		void OnMessage(const rapidjson::Document& d);
 
 	private:
 		LoginServer* server;
 		connection_ptr con;
+		LoginProtocol protocol;
 
 		int clientVersion = 0;
 	};
 
 	class LoginServer : public ILoginServer {
 	public:
-		LoginServer(const rapidjson::Value& d) {
+		LoginServer(const std::string& serviceName, const rapidjson::Value& d) {
 			configure(*this, d);
 			configureArray(realms, d, "realms");
+
+			db.reset(IJsonLoginDB::Create("db/" + serviceName + "/"));
 		}
 
 		virtual void Init() override {
@@ -101,7 +161,12 @@ namespace agdg {
 			thread.join();
 		}
 
-		const std::string& GetServerName() { return serverName; }
+		const std::vector<Realm>& GetRealms() const { return realms;  }
+		const std::string& GetServerName() const { return serverName; }
+
+		bool Login(connection_ptr con, const std::string& username, const std::string& password) {
+			return db->VerifyCredentials(username, password, con->get_host());
+		}
 
 	private:
 		static void ForwardMessage(LoginSession* session, connection_hdl hdl, Server::message_ptr msg) {
@@ -124,17 +189,10 @@ namespace agdg {
 			server.run();
 		}
 
-		struct Realm {
-			std::string name, url;
-
-			REFL_BEGIN("LoginServer.Realm", 1)
-				REFL_MUST_CONFIG(name)
-				REFL_MUST_CONFIG(url)
-			REFL_END
-		};
-
 		std::thread thread;
 		Server server;
+
+		std::unique_ptr<ILoginDB> db;
 
 		std::string serverName;
 		int listenPort;
@@ -154,11 +212,11 @@ namespace agdg {
 				return;
 
 			if (clientVersion == kExpectedClientVersion) {
-				LoginProtocol::SendHello(con, server->GetServerName());
+				protocol.SendHello(server->GetServerName());
 				this->clientVersion = clientVersion;
 			}
 			else {
-				LoginProtocol::SendReject(con, kExpectedClientVersion);
+				protocol.SendReject(kExpectedClientVersion);
 			}
 		}
 		else {
@@ -167,11 +225,21 @@ namespace agdg {
 			if (!getString(d, "username", username) || !getString(d, "password", password))
 				return;
 
-			g_log->Log("Logging in user %s (pw length %d)", username.c_str(), password.size());
+			g_log->Log("Logging in user %s (password length %d)", username.c_str(), password.size());
+
+			// FIXME: this really should be done asynchronously
+			bool ok = server->Login(con, username, password);
+
+			if (ok) {
+				protocol.SendLoginSuccess("", server->GetRealms());
+			}
+			else {
+				protocol.SendError("Invalid username or password");
+			}
 		}
 	}
 
-	ILoginServer* ILoginServer::Create(const rapidjson::Value& config) {
-		return new LoginServer(config);
+	ILoginServer* ILoginServer::Create(const std::string& serviceName, const rapidjson::Value& config) {
+		return new LoginServer(serviceName, config);
 	}
 }

@@ -65,9 +65,9 @@ namespace agdg {
 			g_log->Log("Starting service '%s' of class %s", name.c_str(), class_.c_str());
 
 			if (class_ == "ILoginServer")
-				return ILoginServer::Create(d);
+				return ILoginServer::Create(name, d);
 			else if (class_ == "IManagementConsole")
-				return IManagementConsole::Create(d);
+				return IManagementConsole::Create(name, d);
 			else
 				throw std::runtime_error((std::string) "unknown service class " + class_.c_str());
 		}

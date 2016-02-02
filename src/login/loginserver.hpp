@@ -7,6 +7,6 @@
 namespace agdg {
 	class ILoginServer : public IService {
 	public:
-		static ILoginServer* Create(const rapidjson::Value& config);
+		static ILoginServer* Create(const std::string& serviceName, const rapidjson::Value& config);
 	};
 }
