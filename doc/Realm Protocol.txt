@@ -1,0 +1,62 @@
+
+Note: "hash" means sha3_224 (SHA-3 224 in binary)
+
+CLIENT -> SERVER
+================
+
+Client Hello
+
+	hash token
+
+	Reply: Server Hello
+
+Enter World
+
+	string characterName
+
+	Reply: Load Zone
+
+Zone Loaded
+
+	Reply: Zone Intro
+
+Player Movement
+
+	vec3 pos
+	vec3 dir
+	vec3 velocity
+
+SERVER -> CLIENT
+================
+
+Server Hello
+
+	uint32 numCharacters
+
+	times numCharacters:
+		string characterName
+
+Load Zone
+
+	string zoneName
+	hash zoneRef
+	vec3 playerPos
+	vec3 playerDir
+
+Zone State
+
+	uint32 numEntities
+
+	times numEntities:
+		uint32 eid
+		uint32 flags
+		string name
+		vec3 pos
+		vec3 dir
+
+Entity Update
+
+	uint32 eid
+	vec3 pos
+	vec3 dir
+	vec3 velocity

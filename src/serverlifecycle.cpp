@@ -7,6 +7,7 @@
 // All Services: shouldn't really be here, low-priority fix
 #include <login/loginserver.hpp>
 #include <management/managementconsole.hpp>
+#include <realm/realmserver.hpp>
 
 #include <thread>
 #include <vector>
@@ -68,6 +69,8 @@ namespace agdg {
 				return ILoginServer::Create(name, d);
 			else if (class_ == "IManagementConsole")
 				return IManagementConsole::Create(name, d);
+			else if (class_ == "IRealmServer")
+				return IRealmServer::Create(name, d);
 			else
 				throw std::runtime_error((std::string) "unknown service class " + class_.c_str());
 		}

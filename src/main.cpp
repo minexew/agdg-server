@@ -38,8 +38,8 @@ namespace agdg {
 			std::cout << "other exception" << std::endl;
 		}
 
-		std::cerr << "Press any key to close." << std::endl;
-		std::cin.get();
+		//std::cerr << "Press any key to close." << std::endl;
+		//std::cin.get();
 		return 0;
 	}
 }

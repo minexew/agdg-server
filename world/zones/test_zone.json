@@ -1,0 +1,9 @@
+{
+	"name": "Test Zone",
+	"entities": {
+		"floor": {
+			"type": "box",
+			"scale": [10, 10, 0.1]
+		}
+	}
+}

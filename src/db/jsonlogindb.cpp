@@ -1,13 +1,12 @@
 #include <db/db.hpp>
 
+#include <utility/hashutils.hpp>
 #include <utility/logging.hpp>
 #include <utility/rapidjsonutils.hpp>
 
 #include <rapidjson/filereadstream.h>
 #include <rapidjson/filewritestream.h>
 #include <rapidjson/writer.h>
-
-#include <rhash/sha3.h>
 
 #include <sstream>
 
@@ -39,7 +38,7 @@ namespace agdg {
 
 			writer.StartObject();
 			writer.String("password_sha3_512");
-			writer.String(StringToSHA3_512String(password).c_str());
+			writer.String(HashUtils::StringToSHA3_512Hex(password).c_str());
 			writer.EndObject();
 
 			fclose(f);
@@ -64,7 +63,7 @@ namespace agdg {
 
 			getString(d, "password_sha3_512", passwordHash);
 
-			if (StringToSHA3_512String(password) != passwordHash) {
+			if (HashUtils::StringToSHA3_512Hex(password) != passwordHash) {
 				g_log->Log("rejecting user '%s' from '%s' (invalid password)", username.c_str(), hostname.c_str());
 				return false;
 			}
@@ -103,22 +102,6 @@ namespace agdg {
 
 			fclose(f);
 			return true;
-		}
-
-		std::string StringToSHA3_512String(const std::string& str) {
-			sha3_ctx ctx;
-			uint8_t hash[64];
-
-			rhash_sha3_512_init(&ctx);
-			rhash_sha3_update(&ctx, (const uint8_t*) str.c_str(), str.size());
-			rhash_sha3_final(&ctx, hash);
-
-			char string[129];
-
-			for (int i = 0; i < sizeof(hash); i++)
-				snprintf(string + i * 2, 3, "%02x", hash[i]);
-
-			return string;
 		}
 
 		std::string dir;
