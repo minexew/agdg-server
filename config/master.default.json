@@ -7,7 +7,8 @@
     "login": {
       "class": "ILoginServer",
       "listenPort": "9002",
-      "realms": [{"name": "AGDQ MMO Test", "url": "ws://localhost:9003"}]
+      "serverName": "AGDG MMO Official",
+      "realms": [{"name": "AGDG MMO Test Realm", "url": "ws://localhost:9003"}]
     }
   }
 }

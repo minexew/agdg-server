@@ -94,6 +94,8 @@ namespace agdg {
 		}
 
 		virtual void Stop() override {
+			// FIXME: end all connections
+
 			server.stop();
 
 			thread.join();

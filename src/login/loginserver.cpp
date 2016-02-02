@@ -1,12 +1,16 @@
 #include <login/loginserver.hpp>
 
+#include <agdg/config.hpp>
 #include <utility/logging.hpp>
 #include <utility/rapidjsonconfigmanager.hpp>
+#include <websocketpp_configuration.hpp>
 
 #include <reflection/basic_templates.hpp>
 #include <reflection/magic.hpp>
 
-#include <websocketpp/config/asio_no_tls.hpp>
+#include <rapidjson/document.h>
+#include <rapidjson/writer.h>
+
 #include <websocketpp/server.hpp>
 
 namespace agdg {
@@ -14,43 +18,58 @@ namespace agdg {
 	using websocketpp::lib::placeholders::_1;
 	using websocketpp::lib::placeholders::_2;
 
-	struct Realm {
-		std::string name, url;
+	enum { kExpectedClientVersion = 1 };
 
-		REFL_BEGIN("LoginServer.Realm", 1)
-			REFL_MUST_CONFIG(name)
-			REFL_MUST_CONFIG(url)
-		REFL_END
+	class LoginSession;
+	class LoginServer;
+
+	typedef websocketpp::server<configuration<LoginSession>> Server;
+	typedef Server::connection_ptr connection_ptr;
+	typedef Server::message_ptr message_ptr;
+
+	class LoginProtocol {
+	public:
+		static void SendHello(connection_ptr con, const std::string& serverName) {
+			rapidjson::StringBuffer s;
+			rapidjson::Writer<rapidjson::StringBuffer> writer(s);
+
+			writer.StartObject();
+			writer.String("type");
+			writer.String("hello");
+			writer.String("serverName");
+			writer.String(serverName.c_str(), serverName.size());
+			writer.EndObject();
+
+			con->send(s.GetString());
+		}
+
+		static void SendReject(connection_ptr con, int expectedVersion) {
+			rapidjson::StringBuffer s;
+			rapidjson::Writer<rapidjson::StringBuffer> writer(s);
+
+			writer.StartObject();
+			writer.String("type");
+			writer.String("reject");
+			writer.String("expectedVersion");
+			writer.Int(expectedVersion);
+			writer.EndObject();
+
+			con->send(s.GetString());
+		}
 	};
 
 	class LoginSession {
 	public:
-		void OnMessage() {
-		}
+		LoginSession(LoginServer* server, connection_ptr con) : server(server), con(con) {}
+
+		void OnMessage(const rapidjson::Document& d);
+
+	private:
+		LoginServer* server;
+		connection_ptr con;
+
+		int clientVersion = 0;
 	};
-
-	// This needs to be done so that we can have our own class for the session
-	struct custom_config : public websocketpp::config::asio {
-		typedef websocketpp::config::asio core;
-
-		typedef core::concurrency_type concurrency_type;
-		typedef core::request_type request_type;
-		typedef core::response_type response_type;
-		typedef core::message_type message_type;
-		typedef core::con_msg_manager_type con_msg_manager_type;
-		typedef core::endpoint_msg_manager_type endpoint_msg_manager_type;
-		typedef core::alog_type alog_type;
-		typedef core::elog_type elog_type;
-		typedef core::rng_type rng_type;
-		typedef core::transport_type transport_type;
-		typedef core::endpoint_base endpoint_base;
-
-		typedef LoginSession connection_base;
-	};
-
-	typedef websocketpp::server<custom_config> Server;
-	typedef Server::connection_ptr connection_ptr;
-	typedef Server::message_ptr message_ptr;
 
 	class LoginServer : public ILoginServer {
 	public:
@@ -75,35 +94,82 @@ namespace agdg {
 		}
 
 		virtual void Stop() override {
+			// FIXME: end all connections
+
 			server.stop();
 
 			thread.join();
 		}
 
+		const std::string& GetServerName() { return serverName; }
+
 	private:
-		static void ForwardMessage(LoginSession* con, connection_hdl hdl, Server::message_ptr msg) {
-			con->OnMessage();
+		static void ForwardMessage(LoginSession* session, connection_hdl hdl, Server::message_ptr msg) {
+			rapidjson::Document d;
+			d.Parse(msg->get_payload().c_str());
+
+			if (d.GetParseError() == rapidjson::kParseErrorNone)
+				session->OnMessage(d);
 		}
 
 		void OnOpen(connection_hdl hdl) {
 			connection_ptr con = server.get_con_from_hdl(hdl);
-			con->set_message_handler(bind(&LoginServer::ForwardMessage, con.get(), _1, _2));
+
+			con->instance.reset(new LoginSession(this, con));
+
+			con->set_message_handler(bind(&LoginServer::ForwardMessage, con->instance.get(), _1, _2));
 		}
 
 		void Run() {
 			server.run();
 		}
 
+		struct Realm {
+			std::string name, url;
+
+			REFL_BEGIN("LoginServer.Realm", 1)
+				REFL_MUST_CONFIG(name)
+				REFL_MUST_CONFIG(url)
+			REFL_END
+		};
+
 		std::thread thread;
 		Server server;
 
+		std::string serverName;
 		int listenPort;
 		std::vector<Realm> realms;
 
 		REFL_BEGIN("LoginServer", 1)
+			REFL_MUST_CONFIG(serverName)
 			REFL_MUST_CONFIG(listenPort)
 		REFL_END
 	};
+
+	void LoginSession::OnMessage(const rapidjson::Document& d) {
+		if (!clientVersion) {
+			int clientVersion;
+
+			if (!getInt(d, "clientVersion", clientVersion))
+				return;
+
+			if (clientVersion == kExpectedClientVersion) {
+				LoginProtocol::SendHello(con, server->GetServerName());
+				this->clientVersion = clientVersion;
+			}
+			else {
+				LoginProtocol::SendReject(con, kExpectedClientVersion);
+			}
+		}
+		else {
+			std::string username, password;
+
+			if (!getString(d, "username", username) || !getString(d, "password", password))
+				return;
+
+			g_log->Log("Logging in user %s (pw length %d)", username.c_str(), password.size());
+		}
+	}
 
 	ILoginServer* ILoginServer::Create(const rapidjson::Value& config) {
 		return new LoginServer(config);
