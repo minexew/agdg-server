@@ -1,5 +1,5 @@
 #include <agdg/config.hpp>
-#include <serverlifecycle.hpp>
+#include <agdg/serverlifecycle.hpp>
 
 #include <reflection/base.hpp>
 

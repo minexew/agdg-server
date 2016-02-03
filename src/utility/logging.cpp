@@ -31,6 +31,20 @@ namespace agdg {
 	private:
 		HANDLE stdout_;
 	};
+#else
+	class ConsoleColors {
+	public:
+		ConsoleColors() {
+		}
+
+		void SetWhite() {
+			printf("\e[97m");
+		}
+
+		void SetGrey() {
+			printf("\e[37m");
+		}
+	};	
 #endif
 
 	static ConsoleColors s_consoleColors;
@@ -47,7 +61,7 @@ namespace agdg {
 			va_start(args, format);
 
 			auto ts = clock();
-			float t = ts / 1000.0f;
+			float t = ts / (float)CLOCKS_PER_SEC;
 
 			char buffer[2048];
 			vsnprintf(buffer, sizeof(buffer), format, args);

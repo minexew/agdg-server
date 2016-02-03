@@ -82,5 +82,5 @@ namespace agdg {
 		return Write<uint8_t>(out, messageId);
 	}
 
-#include "protocol_generated.cpp"
+#include "protocol_generated_impl.hpp"
 }

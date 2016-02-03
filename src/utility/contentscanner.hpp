@@ -14,7 +14,8 @@ namespace agdg {
 			return std::string(std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>());
 		}
 
-		static void ScanDirectory(const std::string& path, std::function<void(std::string& path, const char* filename)> callback, const std::string& requiredSuffix = "", bool recursive = true) {
+		static void ScanDirectory(const std::string& path, std::function<void(const std::string& path, const char* filename)> callback,
+				const std::string& requiredSuffix = "", bool recursive = true) {
 			tinydir_dir dir;
 
 			for (tinydir_open(&dir, path.c_str()); dir.has_next; tinydir_next(&dir)) {

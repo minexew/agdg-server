@@ -1,8 +1,8 @@
 #include <management/managementconsole.hpp>
 
+#include <agdg/serverlifecycle.hpp>
 #include <utility/logging.hpp>
 #include <utility/rapidjsonconfigmanager.hpp>
-#include <serverlifecycle.hpp>
 
 #include <reflection/magic.hpp>
 

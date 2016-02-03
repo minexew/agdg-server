@@ -2,6 +2,7 @@
 
 #include <agdg/types.hpp>
 
+#include <string>
 #include <vector>
 
 namespace glm {

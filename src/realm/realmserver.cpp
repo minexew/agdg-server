@@ -48,7 +48,7 @@ namespace agdg {
 		std::vector<uint8_t> bytes;
 	};*/
 
-	class ByteVectorBuf : std::streambuf {
+	class ByteVectorBuf : public std::streambuf {
 	public:
 		virtual std::streamsize xsputn(const char_type* s, std::streamsize n) override {
 			size_t pos = bytes.size();
@@ -90,8 +90,9 @@ namespace agdg {
 		void SendReply(T& reply) {
 			//messageBuffer.Clear();
 			messageBuf.Clear();
+			std::ostream os(&messageBuf);
 
-			if (reply.Encode(std::ostream(&messageBuf)))
+			if (reply.Encode(os))
 				con->send(messageBuf.GetBytes(), messageBuf.GetLength());
 		}
 

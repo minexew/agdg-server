@@ -1,4 +1,4 @@
-#include <serverlifecycle.hpp>
+#include <agdg/serverlifecycle.hpp>
 
 #include <agdg/config.hpp>
 #include <agdg/service.hpp>
@@ -9,6 +9,7 @@
 #include <management/managementconsole.hpp>
 #include <realm/realmserver.hpp>
 
+#include <string>
 #include <thread>
 #include <vector>
 
