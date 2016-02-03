@@ -22,70 +22,78 @@ class Field:
 
 		print('    %s\t%s;' % (type, self.name), file=out)
 
-	def write_cpp_read(self, out, name_prefix=''):
+	def write_cpp_read(self, out, rename=None):
 		if self.repeated:
 			print('    uint32_t %s_count;' % self.name, file=out)
 			print('    if (!Read(buffer, length, %s_count)) return false;' % self.name, file=out)
 			print(file=out)
 			print('    for (size_t i = 0; i < %s_count; i++) {' % self.name, file=out)
 			print('        %s.emplace_back();' % self.name, file=out)
-			self.write_cpp_decode(out, scope='%s.back()' % self.name)
+			self.write_cpp_decode(out, rename='%s.back()' % self.name)
 			print('    }', file=out)
 			print(file=out)
 		else:
-			self.write_cpp_decode(out, name_prefix=name_prefix)
+			self.write_cpp_decode(out, rename=rename)
 
-	def write_cpp_write(self, out, name_prefix=''):
+	def write_cpp_write(self, out, rename=None):
 		if self.repeated:
 			print('    if (!Write<uint32_t>(out, %s.size())) return false;' % self.name, file=out)
 			print(file=out)
 			print('    for (size_t i = 0; i < %s.size(); i++) {' % self.name, file=out)
-			self.write_cpp_encode(out, scope='%s[i]' % self.name)
+			self.write_cpp_encode(out, rename='%s[i]' % self.name)
 			print('    }', file=out)
 			print(file=out)
 		else:
-			self.write_cpp_encode(out, name_prefix=name_prefix)
+			self.write_cpp_encode(out, rename=rename)
 
-	def write_cpp_decode(self, out, name_prefix='', scope=None):
+	def write_cpp_decode(self, out, rename=None):
 		if not self.cpp_decode_func: raise Exception('undefined cpp_decode_func for %s' % self.name)
 
-		name = name_prefix + self.name if not scope else scope
+		print('    if (!%s(buffer, length, %s)) return false;' % (self.cpp_decode_func, rename or self.name), file=out)
 
-		print('    if (!%s(buffer, length, %s)) return false;' % (self.cpp_decode_func, name), file=out)
-
-	def write_cpp_encode(self, out, name_prefix='', scope=None):
+	def write_cpp_encode(self, out, rename=None):
 		if not self.cpp_encode_func: raise Exception('undefined cpp_encode_func for %s' % self.name)
 
-		name = name_prefix + self.name if not scope else scope
+		print('    if (!%s(out, %s)) return false;' % (self.cpp_encode_func, rename or self.name), file=out)
 
-		print('    if (!%s(out, %s)) return false;' % (self.cpp_encode_func, name), file=out)
-
-	def write_ts_read(self, out, name_prefix=''):
+	def write_ts_read(self, out, rename=None):
 		if self.repeated:
 			print('    var %s_count = dv.getUint32(offset, true);' % self.name, file=out)
 			print('    offset += 4;', file=out)
-			print('    %s%s = [];' % (name_prefix, self.name), file=out)
+			print('    %s = [];' % (rename or self.name), file=out)
 			print(file=out)
 			print('    for (var i = 0; i < %s_count; i++) {' % self.name, file=out)
 			print('        var the_%s: any;' % self.name, file=out)
-			self.write_ts_decode(out, scope='the_%s' % self.name)
-			print('        %s%s.push(the_%s);' % (name_prefix, self.name, self.name), file=out)
+			self.write_ts_decode(out, rename='the_%s' % self.name)
+			print('        %s.push(the_%s);' % (rename or self.name, self.name), file=out)
 			print('    }', file=out)
 			print(file=out)
 		else:
-			self.write_ts_decode(out, name_prefix=name_prefix)
+			self.write_ts_decode(out, rename=rename)
 
-	def write_ts_write(self, out, name_prefix=''):
+	def write_ts_write(self, out, rename=None):
 		if self.repeated:
 			print('    this.dv.setUint32(offset, %s.length, true);' % self.name, file=out)
 			print('    offset += 4;', file=out)
 			print(file=out)
 			print('    for (var i = 0; i < %s.length; i++) {' % self.name, file=out)
-			self.write_ts_encode(out, scope='%s[i]' % self.name)
+			self.write_ts_encode(out, rename='%s[i]' % self.name)
 			print('    }', file=out)
 			print(file=out)
 		else:
-			self.write_ts_encode(out, name_prefix=name_prefix)
+			self.write_ts_encode(out, rename=rename)
+
+	def write_ts_decode(self, out, rename=None):
+		if not self.ts_decode_func: raise Exception('undefined ts_decode_func for %s' % self.name)
+
+		print('    %s = dv.%s(offset, true);' % (rename or self.name, self.ts_decode_func), file=out)
+		print('    offset += 4;', file=out)
+
+	def write_ts_encode(self, out, rename=None):
+		if not self.ts_encode_func: raise Exception('undefined ts_encode_func for %s' % self.name)
+
+		print('    this.dv.%s(offset, %s, true);' % (self.ts_encode_func, rename or self.name), file=out)
+		print('    offset += 4;', file=out)
 
 class CompoundField(Field):
 	def __init__(self, name, typename, data, repeated=False):
@@ -104,84 +112,71 @@ class CompoundField(Field):
 
 		print('    };', file=out)
 
-	def write_cpp_decode(self, out, scope=None):
+	def write_cpp_decode(self, out, rename=None):
 		for field in self.data:
-			field.write_cpp_read(out, name_prefix=scope + '.' if scope else '')
+			field.write_cpp_read(out, rename=(rename or self.name) + '.' + field.name)
 
-	def write_cpp_encode(self, out, scope=None):
+	def write_cpp_encode(self, out, rename=None):
 		for field in self.data:
-			field.write_cpp_write(out, name_prefix=scope + '.' if scope else '')
+			field.write_cpp_write(out, rename=(rename or self.name) + '.' + field.name)
 
-	def write_ts_decode(self, out, scope=None):
-		if scope:
-			print('    %s = {};' % scope, file=out)
+	def write_ts_decode(self, out, rename=None):
+		if rename:
+			print('    %s = {};' % rename, file=out)
 
 		for field in self.data:
-			field.write_ts_read(out, name_prefix=scope + '.' if scope else '')
+			field.write_ts_read(out, rename=(rename or self.name) + '.' + field.name)
 
-	def write_ts_encode(self, out, scope=None):
+	def write_ts_encode(self, out, rename=None):
 		for field in self.data:
-			field.write_ts_write(out, name_prefix=scope + '.' if scope else '')
+			field.write_ts_write(out, rename=(rename or self.name) + '.' + field.name)
 
 class HashField(Field):
 	def __init__(self, name, repeated=False):
 		super().__init__( name, repeated, cpp_type='SHA3_224', ts_type='string')
 
-	def write_ts_decode(self, out, name_prefix='', scope=None):
-		name = name_prefix + self.name if not scope else scope
-
-		print('    %s = this.decodeHash(dv, offset);' % name, file=out)
+	def write_ts_decode(self, out, rename=None):
+		print('    %s = this.decodeHash(dv, offset);' % (rename or self.name), file=out)
 		print('    offset += 28;', file=out)
 
-	def write_ts_encode(self, out, name_prefix='', scope=None):
-		name = name_prefix + self.name if not scope else scope
-
-		print('    offset += this.encodeHash(offset, %s);' % name, file=out)
+	def write_ts_encode(self, out, rename=None):
+		print('    offset += this.encodeHash(offset, %s);' % (rename or self.name), file=out)
 
 class StringField(Field):
 	def __init__(self, name, repeated=False):
 		super().__init__(name, repeated, cpp_type='std::string', ts_decode_func='decodeString', ts_type='string')
 
-	def write_ts_decode(self, out, name_prefix='', scope=None):
-		name = name_prefix + self.name if not scope else scope
+	def write_ts_decode(self, out, rename=None):
+		name = (rename or self.name)
 
 		# FIXME: still wrong
 		print('    %s = this.decodeString(dv, offset);' % name, file=out)
 		print('    offset += 4 + %s.length;' % name, file=out)
 
-	def write_ts_encode(self, out, name_prefix='', scope=None):
-		name = name_prefix + self.name if not scope else scope
+	def write_ts_encode(self, out, rename=None):
+		print('    offset += this.encodeString(offset, %s);' % (rename or self.name), file=out)
 
-		print('    offset += this.encodeString(offset, %s);' % name, file=out)
+class Int32Field(Field):
+	def __init__(self, name, repeated=False):
+		super().__init__(name, repeated, cpp_type='int32_t', ts_type='number',
+				ts_decode_func='getInt32', ts_encode_func='setInt32')
 
 class Uint32Field(Field):
 	def __init__(self, name, repeated=False):
-		super().__init__(name, repeated, cpp_type='uint32_t', ts_type='number')
-
-	def write_ts_decode(self, out, name_prefix='', scope=None):
-		name = name_prefix + self.name if not scope else scope
-
-		print('    %s = dv.getUint32(offset, true);' % name, file=out)
-		print('    offset += 4;', file=out)
-
-	def write_ts_encode(self, out, name_prefix='', scope=None):
-		name = name_prefix + self.name if not scope else scope
-
-		print('    this.dv.setUint32(offset, %s, true);' % name, file=out)
-		print('    offset += 4;', file=out)
+		super().__init__(name, repeated, cpp_type='uint32_t', ts_type='number',
+				ts_decode_func='getUint32', ts_encode_func='setUint32')
 
 class Vec3Field(Field):
 	def __init__(self, name, repeated=False):
 		super().__init__(name, repeated, cpp_type='glm::vec3', ts_type='pc.Vec3')
 
-	def write_ts_decode(self, out, name_prefix='', scope=None):
-		name = name_prefix + self.name if not scope else scope
-
-		print('    %s = new pc.Vec3(dv.getFloat32(offset, true), dv.getFloat32(offset + 4, true), dv.getFloat32(offset + 8, true));' % name, file=out)
+	def write_ts_decode(self, out, rename=None):
+		print('    %s = new pc.Vec3(dv.getFloat32(offset, true), dv.getFloat32(offset + 4, true), dv.getFloat32(offset + 8, true));'
+				% (rename or self.name), file=out)
 		print('    offset += 12;', file=out)
 
-	def write_ts_encode(self, out, name_prefix='', scope=None):
-		name = name_prefix + self.name if not scope else scope
+	def write_ts_encode(self, out, rename=None):
+		name = (rename or self.name)
 
 		print('    this.dv.setFloat32(offset, %s.x, true);' % name, file=out)
 		print('    this.dv.setFloat32(offset + 4, %s.y, true);' % name, file=out)
@@ -220,13 +215,6 @@ messages['CPlayerMovement'] = Message(
 	]
 )
 
-messages['CRequestAsset'] = Message(
-	id=5,
-	data=[
-		HashField('hash')
-	]
-)
-
 # SERVER -> CLIENT
 
 messages['SHello'] = Message(
@@ -241,14 +229,15 @@ messages['SLoadZone'] = Message(
 	data=[
 		StringField('zoneName'),
 		HashField('zoneRef'),
-		Vec3Field('playerPos'),
-		Vec3Field('playerDir')
 	]
 )
 
 messages['SZoneState'] = Message(
 	id=3,
 	data=[
+		Vec3Field('playerPos'),
+		Vec3Field('playerDir'),
+		Int32Field('playerEid'),
 		CompoundField('entities', 'Entity', repeated=True, data=[
 			Uint32Field('eid'),
 			Uint32Field('flags'),
@@ -259,21 +248,33 @@ messages['SZoneState'] = Message(
 	]
 )
 
+messages['SEntitySpawn'] = Message(
+	id=20,
+	data=[
+		CompoundField('entity', 'Entity', data=[
+			Uint32Field('eid'),
+			Uint32Field('flags'),
+			StringField('name'),
+			Vec3Field('pos'),
+			Vec3Field('dir')
+		])
+	]
+)
+
+messages['SEntityDespawn'] = Message(
+	id=21,
+	data=[
+		Int32Field('eid'),
+	],
+)
+
 messages['SEntityUpdate'] = Message(
-	id=4,
+	id=22,
 	data=[
 		Uint32Field('eid'),
 		Vec3Field('pos'),
 		Vec3Field('dir'),
 		Vec3Field('velocity')
-	]
-)
-
-messages['SAsset'] = Message(
-	id=5,
-	data=[
-		HashField('hash'),
-		StringField('data')
 	]
 )
 
@@ -300,7 +301,7 @@ def generate_cpp_header():
 			print('};', file=out)
 
 def generate_cpp_source():
-	with open('src/realm/protocol_generated.cpp', 'wt') as out:
+	with open('src/realm/protocol_generated_impl.hpp', 'wt') as out:
 		for name, msg in messages.items():
 			print('bool %s::Decode(const uint8_t* buffer, size_t length) {' % name, file=out)
 
@@ -331,7 +332,7 @@ def generate_ts_source():
 			print('    var data: any = {};', file=out)
 
 			for field in msg.data:
-				field.write_ts_read(out, name_prefix='data.')
+				field.write_ts_read(out, rename='data.' + field.name)
 
 			print('    return data;', file=out)
 			print('}', file=out)

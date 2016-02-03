@@ -3,6 +3,12 @@
 #include <cstdint>
 #include <functional>
 
+namespace glm {
+	struct vec3 {
+		float xyz[3];
+	};
+}
+
 namespace agdg {
 	struct SHA3_224 {
 		uint8_t bytes[28];

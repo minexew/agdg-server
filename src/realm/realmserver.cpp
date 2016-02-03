@@ -3,6 +3,7 @@
 #include <agdg/config.hpp>
 #include <db/db.hpp>
 #include <realm/realmprotocol.hpp>
+#include <realm/zoneinstance.hpp>
 #include <utility/hashutils.hpp>
 #include <utility/logging.hpp>
 #include <utility/rapidjsonconfigmanager.hpp>
@@ -30,24 +31,7 @@ namespace agdg {
 	typedef Server::connection_ptr connection_ptr;
 	typedef Server::message_ptr message_ptr;
 
-	/*class ByteVectorStream : std::ostream {
-	public:
-		virtual std::ostream& write(const char* s, std::streamsize n) override {
-			size_t pos = bytes.size();
-			bytes.resize(pos + n);
-			memcpy(&bytes[pos], s, n);
-		}
-
-		void Clear() {
-			bytes.resize(0);
-		}
-
-		const uint8_t* GetBytes() { return &bytes[0]; }
-
-	private:
-		std::vector<uint8_t> bytes;
-	};*/
-
+	// TODO: get completely rid of streambuf (and ostream) and use more efficient direct access
 	class ByteVectorBuf : public std::streambuf {
 	public:
 		virtual std::streamsize xsputn(const char_type* s, std::streamsize n) override {
@@ -75,30 +59,40 @@ namespace agdg {
 		std::vector<uint8_t> bytes;
 	};
 
-	class RealmSession {
+	class RealmSession : private ZoneInstanceListener {
 	public:
 		RealmSession(RealmServer* server, connection_ptr con) : server(server), con(con) {}
 
-		void OnMessage(int id, const uint8_t* buffer, size_t length);
+		void close();
+		void on_message(int id, const uint8_t* buffer, size_t length);
 
-		void HandleMessage(CEnterWorld& msg);
-		void HandleMessage(CHello& msg);
-		void HandleMessage(CRequestAsset& msg);
-		void HandleMessage(CZoneLoaded& msg);
+		void handle(CEnterWorld& msg);
+		void handle(CHello& msg);
+		void handle(CPlayerMovement& msg);
+		void handle(CZoneLoaded& msg);
 
 		template <typename T>
-		void SendReply(T& reply) {
+		void send(T& message) {
 			//messageBuffer.Clear();
 			messageBuf.Clear();
 			std::ostream os(&messageBuf);
 
-			if (reply.Encode(os))
+			if (message.Encode(os))
 				con->send(messageBuf.GetBytes(), messageBuf.GetLength());
 		}
 
 	private:
+		virtual void on_entity_despawn(int eid) override;
+		virtual void on_entity_spawn(int eid, Entity* entity, const glm::vec3& pos, const glm::vec3& dir) override;
+		virtual void on_entity_update(int eid, const glm::vec3& pos, const glm::vec3& dir, const glm::vec3& velocity) override;
+
 		RealmServer* server;
 		connection_ptr con;
+
+		ZoneInstance* inst = nullptr;
+		PlayerCharacter* pc = nullptr;
+		Entity* player_entity = nullptr;
+		int player_eid = 0;
 
 		bool tokenValidated = false;
 
@@ -111,9 +105,12 @@ namespace agdg {
 		RealmServer(const std::string& serviceName, const rapidjson::Value& d) {
 			configure(*this, d);
 
-			contentMgr.reset(IContentManager::Create());
-			zoneMgr.reset(IZoneManager::Create(contentMgr.get()));
-			zoneMgr->ReloadContent();
+			content_mgr.reset(IContentManager::Create());
+			zone_mgr.reset(IZoneManager::Create(content_mgr.get()));
+			zone_mgr->ReloadContent();
+
+			IZone* test_zone = zone_mgr->GetZoneById("test_zone");
+			world_zone.reset(ZoneInstance::Create(test_zone));
 
 			//db.reset(IJsonRealmDB::Create("db/" + serviceName + "/"));
 		}
@@ -123,7 +120,8 @@ namespace agdg {
 
 			server.clear_access_channels(websocketpp::log::alevel::all);
 
-			server.set_open_handler(bind(&RealmServer::OnOpen, this, _1));
+			server.set_open_handler(bind(&RealmServer::on_open, this, _1));
+			server.set_close_handler(bind(&RealmServer::on_close, this, _1));
 
 			server.listen(listenPort);
 			server.start_accept();
@@ -141,24 +139,32 @@ namespace agdg {
 			thread.join();
 		}
 
-		IContentManager* GetContentManager() { return contentMgr.get(); }
-		IZoneManager* GetZoneManager() { return zoneMgr.get(); }
+		//IContentManager* get_content_manager() { return content_mgr.get(); }
+		//IZoneManager* GetZoneManager() { return zoneMgr.get(); }
+		ZoneInstance* get_world_zone() { return world_zone.get(); }
 
 	private:
-		void ForwardMessage(RealmSession* session, connection_hdl hdl, Server::message_ptr msg) {
+		void on_close(connection_hdl hdl) {
+			connection_ptr con = server.get_con_from_hdl(hdl);
+
+			con->instance->close();
+			con->instance.reset();
+		}
+
+		void on_message_received(RealmSession* session, connection_hdl hdl, Server::message_ptr msg) {
 			auto data = (const uint8_t*) msg->get_payload().c_str();
 			size_t length = msg->get_payload().size();
 
 			if (length >= 1)
-				session->OnMessage(data[0], data + 1, length - 1);
+				session->on_message(data[0], data + 1, length - 1);
 		}
 
-		void OnOpen(connection_hdl hdl) {
+		void on_open(connection_hdl hdl) {
 			connection_ptr con = server.get_con_from_hdl(hdl);
 
 			con->instance.reset(new RealmSession(this, con));
 
-			con->set_message_handler(bind(&RealmServer::ForwardMessage, this, con->instance.get(), _1, _2));
+			con->set_message_handler(bind(&RealmServer::on_message_received, this, con->instance.get(), _1, _2));
 		}
 
 		void Run() {
@@ -170,8 +176,10 @@ namespace agdg {
 
 		//std::unique_ptr<ILoginDB> db;
 
-		std::unique_ptr<IContentManager> contentMgr;
-		std::unique_ptr<IZoneManager> zoneMgr;
+		std::unique_ptr<IContentManager> content_mgr;
+		std::unique_ptr<IZoneManager> zone_mgr;
+
+		std::unique_ptr<ZoneInstance> world_zone;
 
 		std::string serverName;
 		int listenPort;
@@ -181,62 +189,122 @@ namespace agdg {
 		REFL_END
 	};
 
-	void RealmSession::HandleMessage(CHello& msg) {
+	void RealmSession::close() {
+		if (player_entity) {
+			inst->unsubscribe(this);
+			inst->remove_entity(player_eid);
+
+			// FIXME
+			delete player_entity;
+			player_entity = nullptr;
+		}
+	}
+
+	void RealmSession::handle(CHello& msg) {
 		// FIXME: validate token (asynchronously?)
 		tokenValidated = true;
 
 		SHello reply = { { "TestChar" } };
-		SendReply(reply);
+		send(reply);
 	}
 
-	void RealmSession::HandleMessage(CEnterWorld& msg) {
-		g_log->Log("character %s entering world", msg.characterName.c_str());
+	void RealmSession::handle(CEnterWorld& msg) {
+		//g_log->Log("character %s entering world", msg.characterName.c_str());
 		
-		IZone* zone = server->GetZoneManager()->GetZoneById("test_zone");
-		// FIXME: can be NULL
-
-		SLoadZone reply = { zone->GetName(), zone->GetHash(), glm::vec3{}, glm::vec3{} };
-		SendReply(reply);
-	}
-
-	void RealmSession::HandleMessage(CRequestAsset& msg) {
-		SAsset reply;
-
-		// FIXME: this should be done by a content server, not Realm!!
-		if (!server->GetContentManager()->GetCachedAsset(msg.hash, reply.data)) {
-			g_log->Log("failed to retrieve cached asset %s", HashUtils::HashToHexString(msg.hash).c_str());
+		if (inst != nullptr)
 			return;
-		}
 
-		reply.hash = msg.hash;
-		SendReply(reply);
+		pc = new PlayerCharacter;
+
+		// FIXME: can be NULL etc.
+		inst = server->get_world_zone();
+		auto zone = inst->get_zone();
+
+		SLoadZone reply = { zone->GetName(), zone->GetHash() };
+		send(reply);
 	}
 
-	void RealmSession::HandleMessage(CZoneLoaded& msg) {
+	void RealmSession::handle(CPlayerMovement& msg) {
+		// FIXME: validate movement
+
+		if (!inst || !player_entity)
+			return;
+
+		player_entity->set_pos_dir_velocity(msg.pos, msg.dir, msg.velocity);
+		inst->broadcast_entity_update(player_eid, msg.pos, msg.dir, msg.velocity);
+	}
+
+	void RealmSession::handle(CZoneLoaded& msg) {
+		if (!inst || !pc)
+			return;
+
 		SZoneState reply;
 
-		// TODO: iterate entities in zone
+		// create player entity
+		player_entity = Entity::create_player_entity(pc);
 
-		reply.entities.push_back({ 1, 0, "Test Entity", glm::vec3{2, 2, 1}, glm::vec3{} });
-		
-		SendReply(reply);
+		inst->iterate_entities([this, &reply](int eid, auto ent) {
+			reply.entities.emplace_back();
+			auto& ent_state = reply.entities.back();
+			ent_state.eid = eid;
+			ent_state.name = "<???>";		// FIXME: will each entity have a name?
+			ent_state.flags = 0;			// FIXME
+			ent_state.pos = ent->get_pos();
+			ent_state.dir = ent->get_dir();
+		});
+
+		player_eid = inst->add_entity(player_entity);
+
+		reply.playerEid = player_eid;
+		reply.playerPos = player_entity->get_pos();
+		reply.playerDir = player_entity->get_dir();
+		send(reply);
+
+		inst->subscribe(this);
 	}
 
-	void RealmSession::OnMessage(int id, const uint8_t* buffer, size_t length) {
+	void RealmSession::on_entity_despawn(int eid) {
+		SEntityDespawn msg;
+		msg.eid = eid;
+		send(msg);
+	}
+
+	void RealmSession::on_entity_spawn(int eid, Entity* entity, const glm::vec3& pos, const glm::vec3& dir) {
+		SEntitySpawn msg;
+		msg.entity.eid = eid;
+		msg.entity.name = "<???>";		// FIXME: will each entity have a name?
+		msg.entity.flags = 0;			// FIXME
+		msg.entity.pos = pos;
+		msg.entity.dir = dir;
+		send(msg);
+	}
+
+	void RealmSession::on_entity_update(int eid, const glm::vec3& pos, const glm::vec3& dir, const glm::vec3& velocity) {
+		if (eid != player_eid) {
+			SEntityUpdate msg;
+			msg.eid = eid;
+			msg.pos = pos;
+			msg.dir = dir;
+			msg.velocity = velocity;
+			send(msg);
+		}
+	}
+
+	void RealmSession::on_message(int id, const uint8_t* buffer, size_t length) {
 		if (!tokenValidated && id != kCHello)
 			return;
 
 #define handle_message(name_) case k##name_: {\
 	name_ msg;\
 	if (!msg.Decode(buffer, length)) return;\
-	this->HandleMessage(msg);\
+	this->handle(msg);\
 	break;\
 }
 
 		switch (id) {
 		handle_message(CHello)
 		handle_message(CEnterWorld)
-		handle_message(CRequestAsset)
+		handle_message(CPlayerMovement)
 		handle_message(CZoneLoaded)
 		default:
 			;

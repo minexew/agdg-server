@@ -4,23 +4,23 @@ Note: "hash" means sha3_224 (SHA-3 224 in binary)
 CLIENT -> SERVER
 ================
 
-Client Hello
+01 Client Hello
 
 	hash token
 
 	Reply: Server Hello
 
-Enter World
+02 Enter World
 
 	string characterName
 
 	Reply: Load Zone
 
-Zone Loaded
+03 Zone Loaded
 
 	Reply: Zone Intro
 
-Player Movement
+04 Player Movement
 
 	vec3 pos
 	vec3 dir
@@ -29,21 +29,21 @@ Player Movement
 SERVER -> CLIENT
 ================
 
-Server Hello
+01 Server Hello
 
 	uint32 numCharacters
 
 	times numCharacters:
 		string characterName
 
-Load Zone
+02 Load Zone
 
 	string zoneName
 	hash zoneRef
 	vec3 playerPos
 	vec3 playerDir
 
-Zone State
+03 Zone State
 
 	uint32 numEntities
 
@@ -54,7 +54,19 @@ Zone State
 		vec3 pos
 		vec3 dir
 
-Entity Update
+20 Entity Spawn
+
+	uint32 eid
+	uint32 flags
+	string name
+	vec3 pos
+	vec3 dir
+
+21 Entity Despawn
+
+	uint32 eid
+
+22 Entity Update
 
 	uint32 eid
 	vec3 pos

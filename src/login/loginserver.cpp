@@ -225,7 +225,7 @@ namespace agdg {
 			if (!getString(d, "username", username) || !getString(d, "password", password))
 				return;
 
-			g_log->Log("Logging in user %s (password length %d)", username.c_str(), password.size());
+			g_log->Log("Logging in user %s from %s (password length %d)", username.c_str(), con->get_host().c_str(), password.size());
 
 			// FIXME: this really should be done asynchronously
 			bool ok = server->Login(con, username, password);

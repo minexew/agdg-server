@@ -20,6 +20,11 @@ namespace agdg {
 	bool Write(std::ostream& out, const T& value);
 
 	template <>
+	bool Read(const uint8_t* buffer, size_t& length, int32_t& value_out) {
+		return Read(buffer, length, &value_out, 4);
+	}
+
+	template <>
 	bool Read(const uint8_t* buffer, size_t& length, uint32_t& value_out) {
 		return Read(buffer, length, &value_out, 4);
 	}
@@ -45,19 +50,25 @@ namespace agdg {
 	}
 
 	template <>
-	bool Write<uint8_t>(std::ostream& out, const uint8_t& value) {
-		out.write(reinterpret_cast<const char*>(&value), 1);
-		return true;
-	}
-
-	template <>
-	bool Write<uint32_t>(std::ostream& out, const uint32_t& value) {
+	bool Write<>(std::ostream& out, const int32_t& value) {
 		out.write(reinterpret_cast<const char*>(&value), 4);
 		return true;
 	}
 
 	template <>
-	bool Write<SHA3_224>(std::ostream& out, const SHA3_224& value) {
+	bool Write<>(std::ostream& out, const uint8_t& value) {
+		out.write(reinterpret_cast<const char*>(&value), 1);
+		return true;
+	}
+
+	template <>
+	bool Write<>(std::ostream& out, const uint32_t& value) {
+		out.write(reinterpret_cast<const char*>(&value), 4);
+		return true;
+	}
+
+	template <>
+	bool Write<>(std::ostream& out, const SHA3_224& value) {
 		out.write(reinterpret_cast<const char*>(&value.bytes), sizeof(value.bytes));
 		return true;
 	}
@@ -69,7 +80,7 @@ namespace agdg {
 	}
 
 	template <>
-	bool Write<std::string>(std::ostream& out, const std::string& value) {
+	bool Write<>(std::ostream& out, const std::string& value) {
 		if (value.size() > UINT32_MAX)
 			return false;
 
