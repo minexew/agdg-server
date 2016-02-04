@@ -35,6 +35,21 @@ namespace agdg {
 	typedef Server::connection_ptr connection_ptr;
 	typedef Server::message_ptr message_ptr;
 
+	void escape_html(const std::string& data, std::string& output) {
+		output.reserve(data.size() + data.size() / 4);
+
+		for (size_t pos = 0; pos != data.size(); ++pos) {
+			switch (data[pos]) {
+			case '&':  output.append("&amp;");       break;
+			case '\"': output.append("&quot;");      break;
+			case '\'': output.append("&apos;");      break;
+			case '<':  output.append("&lt;");        break;
+			case '>':  output.append("&gt;");        break;
+			default:   output.append(&data[pos], 1); break;
+			}
+		}
+	}
+
 	// TODO: get completely rid of streambuf (and ostream) and use more efficient direct access
 	class ByteVectorBuf : public std::streambuf {
 	public:
@@ -200,6 +215,7 @@ namespace agdg {
 		if (player_entity) {
 			inst->unsubscribe(this);
 			inst->remove_entity(player_eid);
+			inst->broadcast_chat(0, "<b>" + pc->get_name() + "</b> left.");
 
 			// FIXME: proper ownership management
 			delete player_entity;
@@ -211,12 +227,15 @@ namespace agdg {
 		if (!inst || !pc || !player_eid)
 			return;
 
-		if (!account_snapshot.trusted) {
-			// FIXME: filter out HTML
-		}
+		std::string trusted_text;
 
-		g_log->Log("<%s> %s", pc->get_name().c_str(), msg.text.c_str());
-		inst->broadcast_chat(player_eid, msg.text);
+		if (!account_snapshot.trusted)
+			escape_html(msg.text, trusted_text);
+		else
+			trusted_text.swap(msg.text);
+
+		g_log->Log("<%s> %s", pc->get_name().c_str(), trusted_text.c_str());
+		inst->broadcast_chat(player_eid, trusted_text);
 	}
 
 	void RealmSession::handle(CHello& msg) {
@@ -290,6 +309,7 @@ namespace agdg {
 		SChatSay hello{ 0, "<strong>Welcome to AGDG MMO.</strong>" };
 		send(hello);
 
+		inst->broadcast_chat(0, "<strong>" + pc->get_name() + "</strong> joined.");
 		inst->subscribe(this);
 	}
 

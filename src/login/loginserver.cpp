@@ -37,7 +37,7 @@ namespace agdg {
 		REFL_BEGIN("LoginServer.Realm", 1)
 			REFL_MUST_CONFIG(name)
 			REFL_MUST_CONFIG(url)
-			REFL_END
+		REFL_END
 	};
 
 	class LoginProtocol {
@@ -167,7 +167,16 @@ namespace agdg {
 		const std::string& GetServerName() const { return serverName; }
 
 		bool Login(connection_ptr con, const std::string& username, const std::string& password, AccountSnapshot& snapshot_out) {
-			return db->VerifyCredentials(username, password, con->get_host(), snapshot_out);
+			if (!ValidateUsername(username))
+				return false;
+
+			if (forceAnonymousLogin) {
+				snapshot_out.name = username;
+				snapshot_out.trusted = false;
+				return true;
+			}
+			else
+				return db->VerifyCredentials(username, password, con->get_host(), snapshot_out);
 		}
 
 	private:
@@ -198,11 +207,14 @@ namespace agdg {
 
 		std::string serverName;
 		int listenPort;
+		bool forceAnonymousLogin;
+
 		std::vector<Realm> realms;
 
 		REFL_BEGIN("LoginServer", 1)
 			REFL_MUST_CONFIG(serverName)
 			REFL_MUST_CONFIG(listenPort)
+			REFL_MUST_CONFIG(forceAnonymousLogin)
 		REFL_END
 	};
 

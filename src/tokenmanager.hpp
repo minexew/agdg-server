@@ -5,6 +5,20 @@
 #include <unordered_map>
 
 namespace agdg {
+	// FIXME: move this!
+	template <typename T>
+	bool ValidateUsername(const T& username) {
+		if (username.size() < 2)
+			return false;
+
+		for (auto c : username) {
+			if (!isalnum(c))
+				return false;
+		}
+
+		return true;
+	}
+
 	struct AccountSnapshot {
 		std::string name;
 		bool trusted;

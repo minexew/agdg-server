@@ -76,18 +76,6 @@ namespace agdg {
 		}
 
 	private:
-		bool ValidateUsername(const std::string& username) {
-			if (username.size() < 2)
-				return false;
-
-			for (auto c : username) {
-				if (!isalnum(c))
-					return false;
-			}
-
-			return true;
-		}
-
 		bool LoadAccount(const std::string& username, rapidjson::Document& d) {
 			const auto filename = dir + username + ".json";
 			FILE* f = fopen(filename.c_str(), "rb");		// FIXME: get rid of fopen
