@@ -3,7 +3,7 @@
 #include <iostream>
 
 namespace agdg {
-	inline bool Read(const uint8_t* buffer, size_t& length, void* output, size_t count) {
+	inline bool Read(const uint8_t*& buffer, size_t& length, void* output, size_t count) {
 		if (length < count)
 			return false;
 
@@ -14,33 +14,33 @@ namespace agdg {
 	}
 
 	template <typename T>
-	bool Read(const uint8_t* buffer, size_t& length, T& value_out);
+	bool Read(const uint8_t*& buffer, size_t& length, T& value_out);
 
 	template <typename T>
 	bool Write(std::ostream& out, const T& value);
 
 	template <>
-	bool Read(const uint8_t* buffer, size_t& length, int32_t& value_out) {
+	bool Read(const uint8_t*& buffer, size_t& length, int32_t& value_out) {
 		return Read(buffer, length, &value_out, 4);
 	}
 
 	template <>
-	bool Read(const uint8_t* buffer, size_t& length, uint32_t& value_out) {
+	bool Read(const uint8_t*& buffer, size_t& length, uint32_t& value_out) {
 		return Read(buffer, length, &value_out, 4);
 	}
 
 	template <>
-	bool Read(const uint8_t* buffer, size_t& length, SHA3_224& value_out) {
+	bool Read(const uint8_t*& buffer, size_t& length, SHA3_224& value_out) {
 		return Read(buffer, length, &value_out.bytes, sizeof(value_out.bytes));
 	}
 
 	template <>
-	bool Read(const uint8_t* buffer, size_t& length, glm::vec3& value_out) {
+	bool Read(const uint8_t*& buffer, size_t& length, glm::vec3& value_out) {
 		return Read(buffer, length, &value_out.xyz[0], 12);
 	}
 
 	template <>
-	bool Read(const uint8_t* buffer, size_t& length, std::string& value_out) {
+	bool Read(const uint8_t*& buffer, size_t& length, std::string& value_out) {
 		uint32_t len;
 		if (!Read(buffer, length, len))
 			return false;

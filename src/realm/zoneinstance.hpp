@@ -19,6 +19,7 @@ namespace agdg {
 
 	class ZoneInstanceListener {
 	public:
+		virtual void on_chat(int eid, const std::string& text) = 0;
 		virtual void on_entity_despawn(int eid) = 0;
 		virtual void on_entity_spawn(int eid, Entity* entity, const glm::vec3& pos, const glm::vec3& dir) = 0;
 		virtual void on_entity_update(int eid, const glm::vec3& pos, const glm::vec3& dir, const glm::vec3& velocity) = 0;
@@ -34,6 +35,7 @@ namespace agdg {
 		virtual void subscribe(ZoneInstanceListener* listener) = 0;
 		virtual void unsubscribe(ZoneInstanceListener* listener) = 0;
 
+		virtual void broadcast_chat(int eid, const std::string& text) = 0;
 		virtual void broadcast_entity_update(int eid, const glm::vec3& pos, const glm::vec3& dir, const glm::vec3& velocity) = 0;
 
 		virtual IZone* get_zone() = 0;

@@ -19,6 +19,9 @@
 
 #include <websocketpp/server.hpp>
 
+// TODO: preallocate message structs (both C->S & S->C) to reuse buffers in std::string, vector etc.
+// Maybe use fixed-size buffers in some cases
+
 namespace agdg {
 	using websocketpp::connection_hdl;
 	using websocketpp::lib::placeholders::_1;
@@ -66,6 +69,7 @@ namespace agdg {
 		void close();
 		void on_message(int id, const uint8_t* buffer, size_t length);
 
+		void handle(CChatSay& msg);
 		void handle(CEnterWorld& msg);
 		void handle(CHello& msg);
 		void handle(CPlayerMovement& msg);
@@ -82,6 +86,7 @@ namespace agdg {
 		}
 
 	private:
+		virtual void on_chat(int eid, const std::string& text) override;
 		virtual void on_entity_despawn(int eid) override;
 		virtual void on_entity_spawn(int eid, Entity* entity, const glm::vec3& pos, const glm::vec3& dir) override;
 		virtual void on_entity_update(int eid, const glm::vec3& pos, const glm::vec3& dir, const glm::vec3& velocity) override;
@@ -95,6 +100,7 @@ namespace agdg {
 		int player_eid = 0;
 
 		bool tokenValidated = false;
+		bool trusted = false;
 
 		//ByteVectorStream messageBuffer;
 		ByteVectorBuf messageBuf;
@@ -194,10 +200,22 @@ namespace agdg {
 			inst->unsubscribe(this);
 			inst->remove_entity(player_eid);
 
-			// FIXME
+			// FIXME: proper ownership management
 			delete player_entity;
 			player_entity = nullptr;
 		}
+	}
+
+	void RealmSession::handle(CChatSay& msg) {
+		if (!inst || !player_eid)
+			return;
+
+		if (!trusted) {
+			// FIXME: filter out HTML
+		}
+
+		g_log->Log("<admin> %s", msg.text.c_str());
+		inst->broadcast_chat(player_eid, msg.text);
 	}
 
 	void RealmSession::handle(CHello& msg) {
@@ -260,12 +278,19 @@ namespace agdg {
 		reply.playerDir = player_entity->get_dir();
 		send(reply);
 
+		SChatSay hello{ 0, "<strong>Welcome to AGDG MMO.</strong>" };
+		send(hello);
+
 		inst->subscribe(this);
 	}
 
+	void RealmSession::on_chat(int eid, const std::string& text) {
+		SChatSay msg{ eid, text };
+		send(msg);
+	}
+
 	void RealmSession::on_entity_despawn(int eid) {
-		SEntityDespawn msg;
-		msg.eid = eid;
+		SEntityDespawn msg{ eid };
 		send(msg);
 	}
 
@@ -302,6 +327,7 @@ namespace agdg {
 }
 
 		switch (id) {
+		handle_message(CChatSay)
 		handle_message(CHello)
 		handle_message(CEnterWorld)
 		handle_message(CPlayerMovement)

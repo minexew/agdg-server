@@ -1,14 +1,52 @@
+enum { kCHello = 1 };
+enum { kCEnterWorld = 2 };
+enum { kCZoneLoaded = 3 };
+enum { kCPlayerMovement = 4 };
+enum { kCChatSay = 30 };
+enum { kSHello = 1 };
 enum { kSLoadZone = 2 };
 enum { kSZoneState = 3 };
 enum { kSEntitySpawn = 20 };
-enum { kCEnterWorld = 2 };
-enum { kSHello = 1 };
 enum { kSEntityDespawn = 21 };
 enum { kSEntityUpdate = 22 };
-enum { kCHello = 1 };
-enum { kCPlayerMovement = 4 };
-enum { kCZoneLoaded = 3 };
+enum { kSChatSay = 30 };
 
+struct CHello {
+    SHA3_224	token;
+
+    bool Decode(const uint8_t* buffer, size_t length);
+    bool Encode(std::ostream& out);
+};
+struct CEnterWorld {
+    std::string	characterName;
+
+    bool Decode(const uint8_t* buffer, size_t length);
+    bool Encode(std::ostream& out);
+};
+struct CZoneLoaded {
+    bool Decode(const uint8_t* buffer, size_t length);
+    bool Encode(std::ostream& out);
+};
+struct CPlayerMovement {
+    glm::vec3	pos;
+    glm::vec3	dir;
+    glm::vec3	velocity;
+
+    bool Decode(const uint8_t* buffer, size_t length);
+    bool Encode(std::ostream& out);
+};
+struct CChatSay {
+    std::string	text;
+
+    bool Decode(const uint8_t* buffer, size_t length);
+    bool Encode(std::ostream& out);
+};
+struct SHello {
+    std::vector<std::string>	characters;
+
+    bool Decode(const uint8_t* buffer, size_t length);
+    bool Encode(std::ostream& out);
+};
 struct SLoadZone {
     std::string	zoneName;
     SHA3_224	zoneRef;
@@ -45,20 +83,8 @@ struct SEntitySpawn {
     bool Decode(const uint8_t* buffer, size_t length);
     bool Encode(std::ostream& out);
 };
-struct CEnterWorld {
-    std::string	characterName;
-
-    bool Decode(const uint8_t* buffer, size_t length);
-    bool Encode(std::ostream& out);
-};
-struct SHello {
-    std::vector<std::string>	characters;
-
-    bool Decode(const uint8_t* buffer, size_t length);
-    bool Encode(std::ostream& out);
-};
 struct SEntityDespawn {
-    int32_t	eid;
+    uint32_t	eid;
 
     bool Decode(const uint8_t* buffer, size_t length);
     bool Encode(std::ostream& out);
@@ -72,21 +98,10 @@ struct SEntityUpdate {
     bool Decode(const uint8_t* buffer, size_t length);
     bool Encode(std::ostream& out);
 };
-struct CHello {
-    SHA3_224	token;
+struct SChatSay {
+    uint32_t	eid;
+    std::string	text;
 
-    bool Decode(const uint8_t* buffer, size_t length);
-    bool Encode(std::ostream& out);
-};
-struct CPlayerMovement {
-    glm::vec3	pos;
-    glm::vec3	dir;
-    glm::vec3	velocity;
-
-    bool Decode(const uint8_t* buffer, size_t length);
-    bool Encode(std::ostream& out);
-};
-struct CZoneLoaded {
     bool Decode(const uint8_t* buffer, size_t length);
     bool Encode(std::ostream& out);
 };

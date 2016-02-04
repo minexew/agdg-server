@@ -215,6 +215,13 @@ messages['CPlayerMovement'] = Message(
 	]
 )
 
+messages['CChatSay'] = Message(
+	id=30,
+	data=[
+		StringField('text'),
+	],
+)
+
 # SERVER -> CLIENT
 
 messages['SHello'] = Message(
@@ -264,7 +271,7 @@ messages['SEntitySpawn'] = Message(
 messages['SEntityDespawn'] = Message(
 	id=21,
 	data=[
-		Int32Field('eid'),
+		Uint32Field('eid'),
 	],
 )
 
@@ -278,14 +285,25 @@ messages['SEntityUpdate'] = Message(
 	]
 )
 
+messages['SChatSay'] = Message(
+	id=30,
+	data=[
+		Uint32Field('eid'),
+		StringField('text'),
+	],
+)
+
+# sort messages by ID, first C->S, then S->C
+sorted_messages = sorted(messages.items(), key=lambda tuple: tuple[1].id + (1000 if tuple[0][0] == 'S' else 0))
+
 def generate_cpp_header():
 	with open('src/realm/protocol_generated.hpp', 'wt') as out:
-		for name, msg in messages.items():
+		for name, msg in sorted_messages:
 			print('enum { k%s = %d };' % (name, msg.id), file=out)
 
 		print(file=out)
 
-		for name, msg in messages.items():
+		for name, msg in sorted_messages:
 			print('struct %s {' % name, file=out)
 
 			for field in msg.data:
@@ -302,7 +320,7 @@ def generate_cpp_header():
 
 def generate_cpp_source():
 	with open('src/realm/protocol_generated_impl.hpp', 'wt') as out:
-		for name, msg in messages.items():
+		for name, msg in sorted_messages:
 			print('bool %s::Decode(const uint8_t* buffer, size_t length) {' % name, file=out)
 
 			for field in msg.data:
@@ -326,7 +344,7 @@ def generate_ts_source():
 		print('module RealmProtocol {', file=out)
 		print('export class RealmProtocol extends RealmProtocolBase {', file=out)
 
-		for name, msg in messages.items():
+		for name, msg in sorted_messages:
 			print('decode%s(dv: DataView) {' % name, file=out)
 			print('    var offset = 1;', file=out)
 			print('    var data: any = {};', file=out)

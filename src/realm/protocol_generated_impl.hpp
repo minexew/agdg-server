@@ -1,3 +1,83 @@
+bool CHello::Decode(const uint8_t* buffer, size_t length) {
+    if (!Read(buffer, length, token)) return false;
+    return true;
+}
+
+bool CHello::Encode(std::ostream& out) {
+    Begin(out, kCHello);
+    if (!Write(out, token)) return false;
+    return true;
+}
+
+bool CEnterWorld::Decode(const uint8_t* buffer, size_t length) {
+    if (!Read(buffer, length, characterName)) return false;
+    return true;
+}
+
+bool CEnterWorld::Encode(std::ostream& out) {
+    Begin(out, kCEnterWorld);
+    if (!Write(out, characterName)) return false;
+    return true;
+}
+
+bool CZoneLoaded::Decode(const uint8_t* buffer, size_t length) {
+    return true;
+}
+
+bool CZoneLoaded::Encode(std::ostream& out) {
+    Begin(out, kCZoneLoaded);
+    return true;
+}
+
+bool CPlayerMovement::Decode(const uint8_t* buffer, size_t length) {
+    if (!Read(buffer, length, pos)) return false;
+    if (!Read(buffer, length, dir)) return false;
+    if (!Read(buffer, length, velocity)) return false;
+    return true;
+}
+
+bool CPlayerMovement::Encode(std::ostream& out) {
+    Begin(out, kCPlayerMovement);
+    if (!Write(out, pos)) return false;
+    if (!Write(out, dir)) return false;
+    if (!Write(out, velocity)) return false;
+    return true;
+}
+
+bool CChatSay::Decode(const uint8_t* buffer, size_t length) {
+    if (!Read(buffer, length, text)) return false;
+    return true;
+}
+
+bool CChatSay::Encode(std::ostream& out) {
+    Begin(out, kCChatSay);
+    if (!Write(out, text)) return false;
+    return true;
+}
+
+bool SHello::Decode(const uint8_t* buffer, size_t length) {
+    uint32_t characters_count;
+    if (!Read(buffer, length, characters_count)) return false;
+
+    for (size_t i = 0; i < characters_count; i++) {
+        characters.emplace_back();
+    if (!Read(buffer, length, characters.back())) return false;
+    }
+
+    return true;
+}
+
+bool SHello::Encode(std::ostream& out) {
+    Begin(out, kSHello);
+    if (!Write<uint32_t>(out, characters.size())) return false;
+
+    for (size_t i = 0; i < characters.size(); i++) {
+    if (!Write(out, characters[i])) return false;
+    }
+
+    return true;
+}
+
 bool SLoadZone::Decode(const uint8_t* buffer, size_t length) {
     if (!Read(buffer, length, zoneName)) return false;
     if (!Read(buffer, length, zoneRef)) return false;
@@ -67,40 +147,6 @@ bool SEntitySpawn::Encode(std::ostream& out) {
     return true;
 }
 
-bool CEnterWorld::Decode(const uint8_t* buffer, size_t length) {
-    if (!Read(buffer, length, characterName)) return false;
-    return true;
-}
-
-bool CEnterWorld::Encode(std::ostream& out) {
-    Begin(out, kCEnterWorld);
-    if (!Write(out, characterName)) return false;
-    return true;
-}
-
-bool SHello::Decode(const uint8_t* buffer, size_t length) {
-    uint32_t characters_count;
-    if (!Read(buffer, length, characters_count)) return false;
-
-    for (size_t i = 0; i < characters_count; i++) {
-        characters.emplace_back();
-    if (!Read(buffer, length, characters.back())) return false;
-    }
-
-    return true;
-}
-
-bool SHello::Encode(std::ostream& out) {
-    Begin(out, kSHello);
-    if (!Write<uint32_t>(out, characters.size())) return false;
-
-    for (size_t i = 0; i < characters.size(); i++) {
-    if (!Write(out, characters[i])) return false;
-    }
-
-    return true;
-}
-
 bool SEntityDespawn::Decode(const uint8_t* buffer, size_t length) {
     if (!Read(buffer, length, eid)) return false;
     return true;
@@ -129,38 +175,16 @@ bool SEntityUpdate::Encode(std::ostream& out) {
     return true;
 }
 
-bool CHello::Decode(const uint8_t* buffer, size_t length) {
-    if (!Read(buffer, length, token)) return false;
+bool SChatSay::Decode(const uint8_t* buffer, size_t length) {
+    if (!Read(buffer, length, eid)) return false;
+    if (!Read(buffer, length, text)) return false;
     return true;
 }
 
-bool CHello::Encode(std::ostream& out) {
-    Begin(out, kCHello);
-    if (!Write(out, token)) return false;
-    return true;
-}
-
-bool CPlayerMovement::Decode(const uint8_t* buffer, size_t length) {
-    if (!Read(buffer, length, pos)) return false;
-    if (!Read(buffer, length, dir)) return false;
-    if (!Read(buffer, length, velocity)) return false;
-    return true;
-}
-
-bool CPlayerMovement::Encode(std::ostream& out) {
-    Begin(out, kCPlayerMovement);
-    if (!Write(out, pos)) return false;
-    if (!Write(out, dir)) return false;
-    if (!Write(out, velocity)) return false;
-    return true;
-}
-
-bool CZoneLoaded::Decode(const uint8_t* buffer, size_t length) {
-    return true;
-}
-
-bool CZoneLoaded::Encode(std::ostream& out) {
-    Begin(out, kCZoneLoaded);
+bool SChatSay::Encode(std::ostream& out) {
+    Begin(out, kSChatSay);
+    if (!Write(out, eid)) return false;
+    if (!Write(out, text)) return false;
     return true;
 }
 

@@ -26,6 +26,10 @@ CLIENT -> SERVER
 	vec3 dir
 	vec3 velocity
 
+30 Chat Say
+
+	string text
+
 SERVER -> CLIENT
 ================
 
@@ -72,3 +76,8 @@ SERVER -> CLIENT
 	vec3 pos
 	vec3 dir
 	vec3 velocity
+
+30 Chat Say
+
+	uint32 eid
+	string text
