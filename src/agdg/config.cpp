@@ -23,10 +23,10 @@ namespace agdg {
 
 	class Config : public IConfig {
 	public:
-		virtual void Init() override {
+		virtual void Init(const char* master_config_or_null) override {
 			static const std::string config_dir = "config/";
 
-			LoadConfig(master, config_dir + "master.json", config_dir + "master.default.json");
+			LoadConfig(master, master_config_or_null ? master_config_or_null : (config_dir + "master.json"), config_dir + "master.default.json");
 		}
 
 		virtual void EnumerateServices(std::function<void(const std::string&, const rapidjson::Value&)> callback) override {

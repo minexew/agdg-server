@@ -92,9 +92,10 @@ bool SLoadZone::Encode(std::ostream& out) {
 }
 
 bool SZoneState::Decode(const uint8_t* buffer, size_t length) {
+    if (!Read(buffer, length, playerEid)) return false;
+    if (!Read(buffer, length, playerName)) return false;
     if (!Read(buffer, length, playerPos)) return false;
     if (!Read(buffer, length, playerDir)) return false;
-    if (!Read(buffer, length, playerEid)) return false;
     uint32_t entities_count;
     if (!Read(buffer, length, entities_count)) return false;
 
@@ -112,9 +113,10 @@ bool SZoneState::Decode(const uint8_t* buffer, size_t length) {
 
 bool SZoneState::Encode(std::ostream& out) {
     Begin(out, kSZoneState);
+    if (!Write(out, playerEid)) return false;
+    if (!Write(out, playerName)) return false;
     if (!Write(out, playerPos)) return false;
     if (!Write(out, playerDir)) return false;
-    if (!Write(out, playerEid)) return false;
     if (!Write<uint32_t>(out, entities.size())) return false;
 
     for (size_t i = 0; i < entities.size(); i++) {

@@ -242,9 +242,10 @@ messages['SLoadZone'] = Message(
 messages['SZoneState'] = Message(
 	id=3,
 	data=[
+		Int32Field('playerEid'),
+		StringField('playerName'),
 		Vec3Field('playerPos'),
 		Vec3Field('playerDir'),
-		Int32Field('playerEid'),
 		CompoundField('entities', 'Entity', repeated=True, data=[
 			Uint32Field('eid'),
 			Uint32Field('flags'),

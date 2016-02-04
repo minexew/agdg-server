@@ -4,6 +4,17 @@
 
 namespace agdg {
 	template <typename T>
+	bool getBool(const T& d, const char* name, bool& value_out) {
+		const auto& it = d.FindMember(name);
+
+		if (it == d.MemberEnd() || !it->value.IsBool())
+			return false;
+
+		value_out = it->value.GetBool();
+		return true;
+	}
+
+	template <typename T>
 	bool getInt(const T& d, const char* name, int& value_out) {
 		const auto& it = d.FindMember(name);
 

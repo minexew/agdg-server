@@ -45,7 +45,8 @@ namespace agdg {
 			return true;
 		}
 
-		virtual bool VerifyCredentials(const std::string& username, const std::string& password, const std::string& hostname) override {
+		virtual bool VerifyCredentials(const std::string& username, const std::string& password, const std::string& hostname,
+				AccountSnapshot& snapshot_out) override {
 			// FIXME: error reporting
 			if (!ValidateUsername(username))
 				return false;
@@ -68,6 +69,9 @@ namespace agdg {
 				return false;
 			}
 
+			snapshot_out.name = username;
+			snapshot_out.trusted = false;
+			getBool(d, "trusted", snapshot_out.trusted);
 			return true;
 		}
 
@@ -86,7 +90,7 @@ namespace agdg {
 
 		bool LoadAccount(const std::string& username, rapidjson::Document& d) {
 			const auto filename = dir + username + ".json";
-			FILE* f = fopen(filename.c_str(), "rb");
+			FILE* f = fopen(filename.c_str(), "rb");		// FIXME: get rid of fopen
 
 			if (!f)
 				return false;

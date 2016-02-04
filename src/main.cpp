@@ -1,5 +1,6 @@
 #include <agdg/config.hpp>
 #include <agdg/serverlifecycle.hpp>
+#include <tokenmanager.hpp>
 
 #include <reflection/base.hpp>
 
@@ -20,9 +21,16 @@ namespace reflection {
 }
 
 namespace agdg {
+	TokenManager g_token_manager;
+
 	int main(int argc, char** argv) {
 		try {
-			g_config->Init();
+			const char* config_name = nullptr;
+
+			if (argc >= 2)
+				config_name = argv[1];
+
+			g_config->Init(config_name);
 
 			g_serverLifecycle->Start();
 			g_serverLifecycle->Run();

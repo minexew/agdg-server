@@ -46,7 +46,7 @@ namespace agdg {
 			return zone;
 		}
 
-		virtual void iterate_entities(std::function<void(int eid, Entity* ent)> callback) {
+		virtual void iterate_entities(std::function<void(int eid, Entity* entity)> callback) {
 			for (auto kv : entities) {
 				callback(kv.first, kv.second);
 			}

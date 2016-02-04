@@ -2,6 +2,8 @@
 
 #include <agdg/config.hpp>
 #include <db/db.hpp>
+#include <tokenmanager.hpp>
+#include <utility/hashutils.hpp>
 #include <utility/logging.hpp>
 #include <utility/rapidjsonconfigmanager.hpp>
 #include <utility/rapidjsonutils.hpp>
@@ -164,8 +166,8 @@ namespace agdg {
 		const std::vector<Realm>& GetRealms() const { return realms;  }
 		const std::string& GetServerName() const { return serverName; }
 
-		bool Login(connection_ptr con, const std::string& username, const std::string& password) {
-			return db->VerifyCredentials(username, password, con->get_host());
+		bool Login(connection_ptr con, const std::string& username, const std::string& password, AccountSnapshot& snapshot_out) {
+			return db->VerifyCredentials(username, password, con->get_host(), snapshot_out);
 		}
 
 	private:
@@ -228,10 +230,12 @@ namespace agdg {
 			g_log->Log("Logging in user %s from %s (password length %d)", username.c_str(), con->get_host().c_str(), password.size());
 
 			// FIXME: this really should be done asynchronously
-			bool ok = server->Login(con, username, password);
+			AccountSnapshot account_snapshot;
+			bool ok = server->Login(con, username, password, account_snapshot);
 
 			if (ok) {
-				protocol.SendLoginSuccess("", server->GetRealms());
+				auto token = g_token_manager.assign_account_token(account_snapshot);
+				protocol.SendLoginSuccess(HashUtils::HashToHexString(token), server->GetRealms());
 			}
 			else {
 				protocol.SendError("Invalid username or password");

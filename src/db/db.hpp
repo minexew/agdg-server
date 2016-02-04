@@ -3,6 +3,8 @@
 #include <memory>
 #include <string>
 
+#include <tokenmanager.hpp>
+
 namespace agdg {
 	namespace db {
 		/*class Account {
@@ -26,7 +28,7 @@ namespace agdg {
 
 		// This is wrong, but will be redone
 		virtual bool VerifyCredentials(const std::string& username, const std::string& password,
-			const std::string& hostname) = 0;
+			const std::string& hostname, AccountSnapshot& snapshot_out) = 0;
 	};
 
 	class IJsonLoginDB : public ILoginDB {

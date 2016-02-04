@@ -3,6 +3,10 @@
 namespace agdg {
 	class EntityImpl : public Entity {
 	public:
+		EntityImpl(PlayerCharacter* pc) : pc(pc), pos{0, 0, 0.5f}, dir{}, velocity{} {}
+
+		virtual const std::string& get_name() { return pc->get_name(); }
+
 		virtual const glm::vec3& get_dir() { return dir; }
 		virtual const glm::vec3& get_pos() { return pos; }
 
@@ -13,10 +17,12 @@ namespace agdg {
 		}
 
 	private:
+		PlayerCharacter* pc;
+
 		glm::vec3 pos, dir, velocity;
 	};
 
 	Entity* Entity::create_player_entity(PlayerCharacter* pc) {
-		return new EntityImpl();
+		return new EntityImpl(pc);
 	}
 }

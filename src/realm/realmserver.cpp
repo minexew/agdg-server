@@ -4,6 +4,7 @@
 #include <db/db.hpp>
 #include <realm/realmprotocol.hpp>
 #include <realm/zoneinstance.hpp>
+#include <tokenmanager.hpp>
 #include <utility/hashutils.hpp>
 #include <utility/logging.hpp>
 #include <utility/rapidjsonconfigmanager.hpp>
@@ -99,8 +100,8 @@ namespace agdg {
 		Entity* player_entity = nullptr;
 		int player_eid = 0;
 
+		AccountSnapshot account_snapshot;
 		bool tokenValidated = false;
-		bool trusted = false;
 
 		//ByteVectorStream messageBuffer;
 		ByteVectorBuf messageBuf;
@@ -207,22 +208,25 @@ namespace agdg {
 	}
 
 	void RealmSession::handle(CChatSay& msg) {
-		if (!inst || !player_eid)
+		if (!inst || !pc || !player_eid)
 			return;
 
-		if (!trusted) {
+		if (!account_snapshot.trusted) {
 			// FIXME: filter out HTML
 		}
 
-		g_log->Log("<admin> %s", msg.text.c_str());
+		g_log->Log("<%s> %s", pc->get_name().c_str(), msg.text.c_str());
 		inst->broadcast_chat(player_eid, msg.text);
 	}
 
 	void RealmSession::handle(CHello& msg) {
 		// FIXME: validate token (asynchronously?)
+		if (!g_token_manager.validate_token(msg.token, account_snapshot))
+			return;
+
 		tokenValidated = true;
 
-		SHello reply = { { "TestChar" } };
+		SHello reply = { { account_snapshot.name } };
 		send(reply);
 	}
 
@@ -232,7 +236,11 @@ namespace agdg {
 		if (inst != nullptr)
 			return;
 
-		pc = new PlayerCharacter;
+		if (msg.characterName != account_snapshot.name)
+			return;
+
+		// FIXME: load actual character data etc.
+		pc = new PlayerCharacter{ msg.characterName };
 
 		// FIXME: can be NULL etc.
 		inst = server->get_world_zone();
@@ -261,19 +269,20 @@ namespace agdg {
 		// create player entity
 		player_entity = Entity::create_player_entity(pc);
 
-		inst->iterate_entities([this, &reply](int eid, auto ent) {
+		inst->iterate_entities([this, &reply](int eid, auto entity) {
 			reply.entities.emplace_back();
 			auto& ent_state = reply.entities.back();
 			ent_state.eid = eid;
-			ent_state.name = "<???>";		// FIXME: will each entity have a name?
+			ent_state.name = entity->get_name();
 			ent_state.flags = 0;			// FIXME
-			ent_state.pos = ent->get_pos();
-			ent_state.dir = ent->get_dir();
+			ent_state.pos = entity->get_pos();
+			ent_state.dir = entity->get_dir();
 		});
 
 		player_eid = inst->add_entity(player_entity);
 
 		reply.playerEid = player_eid;
+		reply.playerName = pc->get_name();
 		reply.playerPos = player_entity->get_pos();
 		reply.playerDir = player_entity->get_dir();
 		send(reply);
@@ -297,7 +306,7 @@ namespace agdg {
 	void RealmSession::on_entity_spawn(int eid, Entity* entity, const glm::vec3& pos, const glm::vec3& dir) {
 		SEntitySpawn msg;
 		msg.entity.eid = eid;
-		msg.entity.name = "<???>";		// FIXME: will each entity have a name?
+		msg.entity.name = entity->get_name();
 		msg.entity.flags = 0;			// FIXME
 		msg.entity.pos = pos;
 		msg.entity.dir = dir;

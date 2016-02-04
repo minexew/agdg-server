@@ -62,9 +62,10 @@ struct SZoneState {
     glm::vec3	pos;
     glm::vec3	dir;
     };
+    int32_t	playerEid;
+    std::string	playerName;
     glm::vec3	playerPos;
     glm::vec3	playerDir;
-    int32_t	playerEid;
     std::vector<Entity>	entities;
 
     bool Decode(const uint8_t* buffer, size_t length);

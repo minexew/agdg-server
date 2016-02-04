@@ -5,11 +5,20 @@
 
 namespace agdg {
 	class PlayerCharacter {
+	public:
+		PlayerCharacter(const std::string& name) : name(name) {}
+
+		const std::string& get_name() { return name; }
+
+	private:
+		std::string name;
 	};
 
 	class Entity {
 	public:
 		static Entity* create_player_entity(PlayerCharacter* pc);
+
+		virtual const std::string& get_name() = 0;
 
 		virtual const glm::vec3& get_dir() = 0;
 		virtual const glm::vec3& get_pos() = 0;
@@ -39,6 +48,6 @@ namespace agdg {
 		virtual void broadcast_entity_update(int eid, const glm::vec3& pos, const glm::vec3& dir, const glm::vec3& velocity) = 0;
 
 		virtual IZone* get_zone() = 0;
-		virtual void iterate_entities(std::function<void(int eid, Entity* ent)> callback) = 0;
+		virtual void iterate_entities(std::function<void(int eid, Entity* entity)> callback) = 0;
 	};
 }
