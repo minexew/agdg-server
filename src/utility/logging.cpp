@@ -4,6 +4,7 @@
 #include <mutex>
 #include <string>
 
+#include <cstdarg>
 #include <cstdint>
 #include <cstdio>
 #include <ctime>
