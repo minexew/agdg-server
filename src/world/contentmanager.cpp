@@ -23,7 +23,7 @@ namespace agdg {
 		std::unordered_map<SHA3_224, std::string> cachedAssets;
 	};
 
-	IContentManager* IContentManager::Create() {
-		return new ContentManager();
+	unique_ptr<IContentManager> IContentManager::Create() {
+		return make_unique<ContentManager>();
 	}
 }

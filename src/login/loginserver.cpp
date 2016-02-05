@@ -137,7 +137,7 @@ namespace agdg {
 			configure(*this, d);
 			configureArray(realms, d, "realms");
 
-			db.reset(IJsonLoginDB::Create("db/" + serviceName + "/"));
+			db = IJsonLoginDB::Create("db/" + serviceName + "/");
 		}
 
 		virtual void Init() override {
@@ -191,7 +191,7 @@ namespace agdg {
 		void OnOpen(connection_hdl hdl) {
 			connection_ptr con = server.get_con_from_hdl(hdl);
 
-			con->instance.reset(new LoginSession(this, con));
+			con->instance = make_unique<LoginSession>(this, con);
 
 			con->set_message_handler(bind(&LoginServer::ForwardMessage, con->instance.get(), _1, _2));
 		}
@@ -255,7 +255,7 @@ namespace agdg {
 		}
 	}
 
-	ILoginServer* ILoginServer::Create(const std::string& serviceName, const rapidjson::Value& config) {
-		return new LoginServer(serviceName, config);
+	unique_ptr<ILoginServer> ILoginServer::Create(const std::string& serviceName, const rapidjson::Value& config) {
+		return make_unique<LoginServer>(serviceName, config);
 	}
 }

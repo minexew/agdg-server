@@ -31,7 +31,7 @@ namespace agdg {
 			g_log->Log("Starting Services");
 
 			g_config->EnumerateServices([this](const auto& name, const auto& d) {
-				std::unique_ptr<IService> service(InstantiateService(name, d));
+				auto service = InstantiateService(name, d);
 				service->Init();
 				service->Start();
 
@@ -61,7 +61,7 @@ namespace agdg {
 			isStarted = false;
 		}
 
-		IService* InstantiateService(const std::string& name, const rapidjson::Value& d) {
+		unique_ptr<IService> InstantiateService(const std::string& name, const rapidjson::Value& d) {
 			std::string class_(d["class"].GetString());
 
 			g_log->Log("Starting service '%s' of class %s", name.c_str(), class_.c_str());

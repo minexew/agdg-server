@@ -43,7 +43,7 @@ namespace agdg {
 		virtual IZone* GetZoneById(const std::string& id) override {
 			auto z = zones.find(id);
 
-			return (z != zones.end()) ? z->second : nullptr;
+			return (z != zones.end()) ? z->second.get() : nullptr;
 		}
 
 		virtual void ReloadContent() override {
@@ -52,24 +52,20 @@ namespace agdg {
 
 				auto z = zones.find(zoneName);
 
-				if (z != zones.end()) {
+				if (z != zones.end())
 					g_log->Log("replacing zone %s on-the-fly", zoneName.c_str());
 
-					delete z->second;
-					z->second = nullptr;
-				}
-
-				zones[zoneName] = new Zone(contentMgr, path);
+				zones[zoneName] = make_unique<Zone>(contentMgr, path);
 			}, ".json");
 		}
 
 	private:
 		IContentManager* contentMgr;
 
-		std::unordered_map<std::string, Zone*> zones;
+		std::unordered_map<std::string, std::unique_ptr<Zone>> zones;
 	};
 
-	IZoneManager* IZoneManager::Create(IContentManager* contentMgr) {
-		return new ZoneManager(contentMgr);
+	unique_ptr<IZoneManager> IZoneManager::Create(IContentManager* contentMgr) {
+		return make_unique<ZoneManager>(contentMgr);
 	}
 }

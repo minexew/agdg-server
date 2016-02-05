@@ -22,7 +22,7 @@ namespace agdg {
 		glm::vec3 pos, dir, velocity;
 	};
 
-	Entity* Entity::create_player_entity(PlayerCharacter* pc) {
-		return new EntityImpl(pc);
+	unique_ptr<Entity> Entity::create_player_entity(PlayerCharacter* pc) {
+		return make_unique<EntityImpl>(pc);
 	}
 }

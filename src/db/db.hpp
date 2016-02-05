@@ -33,6 +33,6 @@ namespace agdg {
 
 	class IJsonLoginDB : public ILoginDB {
 	public:
-		static IJsonLoginDB* Create(const std::string& dir);
+		static unique_ptr<IJsonLoginDB> Create(const std::string& dir);
 	};
 }

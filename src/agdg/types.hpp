@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cstring>
 #include <functional>
+#include <memory>
 
 namespace glm {
 	struct vec3 {
@@ -11,6 +12,9 @@ namespace glm {
 }
 
 namespace agdg {
+	using std::make_unique;
+	using std::unique_ptr;
+
 	struct SHA3_224 {
 		uint8_t bytes[28];
 

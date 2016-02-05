@@ -7,7 +7,7 @@
 namespace agdg {
 	class IContentManager {
 	public:
-		static IContentManager* Create();
+		static unique_ptr<IContentManager> Create();
 		virtual ~IContentManager() {}
 
 		// FIXME: Get rid of this bull

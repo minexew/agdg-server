@@ -16,7 +16,7 @@ namespace agdg {
 
 	class Entity {
 	public:
-		static Entity* create_player_entity(PlayerCharacter* pc);
+		static unique_ptr<Entity> create_player_entity(PlayerCharacter* pc);
 
 		virtual const std::string& get_name() = 0;
 
@@ -36,7 +36,7 @@ namespace agdg {
 
 	class ZoneInstance {
 	public:
-		static ZoneInstance* Create(IZone* zone);
+		static unique_ptr<ZoneInstance> Create(IZone* zone);
 
 		virtual int add_entity(Entity* entity) = 0;
 		virtual void remove_entity(int eid) = 0;

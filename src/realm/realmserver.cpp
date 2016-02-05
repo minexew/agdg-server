@@ -111,8 +111,8 @@ namespace agdg {
 		connection_ptr con;
 
 		ZoneInstance* inst = nullptr;
-		PlayerCharacter* pc = nullptr;
-		Entity* player_entity = nullptr;
+		unique_ptr<PlayerCharacter> pc;
+		unique_ptr<Entity> player_entity;
 		int player_eid = 0;
 
 		AccountSnapshot account_snapshot;
@@ -127,12 +127,12 @@ namespace agdg {
 		RealmServer(const std::string& serviceName, const rapidjson::Value& d) {
 			configure(*this, d);
 
-			content_mgr.reset(IContentManager::Create());
-			zone_mgr.reset(IZoneManager::Create(content_mgr.get()));
+			content_mgr = IContentManager::Create();
+			zone_mgr = IZoneManager::Create(content_mgr.get());
 			zone_mgr->ReloadContent();
 
 			IZone* test_zone = zone_mgr->GetZoneById("test_zone");
-			world_zone.reset(ZoneInstance::Create(test_zone));
+			world_zone = ZoneInstance::Create(test_zone);
 
 			//db.reset(IJsonRealmDB::Create("db/" + serviceName + "/"));
 		}
@@ -184,7 +184,7 @@ namespace agdg {
 		void on_open(connection_hdl hdl) {
 			connection_ptr con = server.get_con_from_hdl(hdl);
 
-			con->instance.reset(new RealmSession(this, con));
+			con->instance = make_unique<RealmSession>(this, con);
 
 			con->set_message_handler(bind(&RealmServer::on_message_received, this, con->instance.get(), _1, _2));
 		}
@@ -217,9 +217,8 @@ namespace agdg {
 			inst->remove_entity(player_eid);
 			inst->broadcast_chat(0, "<b>" + pc->get_name() + "</b> left.");
 
-			// FIXME: proper ownership management
-			delete player_entity;
-			player_entity = nullptr;
+			// CHECKME: ownership management OK?
+			player_entity.reset();
 		}
 	}
 
@@ -259,7 +258,7 @@ namespace agdg {
 			return;
 
 		// FIXME: load actual character data etc.
-		pc = new PlayerCharacter{ msg.characterName };
+		pc = make_unique<PlayerCharacter>(msg.characterName);
 
 		// FIXME: can be NULL etc.
 		inst = server->get_world_zone();
@@ -286,7 +285,7 @@ namespace agdg {
 		SZoneState reply;
 
 		// create player entity
-		player_entity = Entity::create_player_entity(pc);
+		player_entity = Entity::create_player_entity(pc.get());
 
 		inst->iterate_entities([this, &reply](int eid, auto entity) {
 			reply.entities.emplace_back();
@@ -298,7 +297,7 @@ namespace agdg {
 			ent_state.dir = entity->get_dir();
 		});
 
-		player_eid = inst->add_entity(player_entity);
+		player_eid = inst->add_entity(player_entity.get());
 
 		reply.playerEid = player_eid;
 		reply.playerName = pc->get_name();
@@ -366,7 +365,7 @@ namespace agdg {
 		}
 	}
 
-	IRealmServer* IRealmServer::Create(const std::string& serviceName, const rapidjson::Value& config) {
-		return new RealmServer(serviceName, config);
+	unique_ptr<IRealmServer> IRealmServer::Create(const std::string& serviceName, const rapidjson::Value& config) {
+		return make_unique<RealmServer>(serviceName, config);
 	}
 }

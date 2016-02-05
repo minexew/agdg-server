@@ -99,7 +99,7 @@ namespace agdg {
 		std::string dir;
 	};
 
-	IJsonLoginDB* IJsonLoginDB::Create(const std::string& dir) {
-		return new JsonLoginDB(dir);
+	unique_ptr<IJsonLoginDB> IJsonLoginDB::Create(const std::string& dir) {
+		return make_unique<JsonLoginDB>(dir);
 	}
 }
