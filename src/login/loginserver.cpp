@@ -245,7 +245,7 @@ namespace agdg {
 		int listenPort;
 		bool forceAnonymousLogin;
 
-		bool server_closed;
+		bool server_closed = false;
 		std::string server_closure_message;
 		std::mutex server_closure_message_mutex;
 

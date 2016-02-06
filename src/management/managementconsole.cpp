@@ -3,6 +3,7 @@
 #include <agdg/serverlifecycle.hpp>
 #include <utility/logging.hpp>
 #include <utility/rapidjsonconfigmanager.hpp>
+#include <utility/rapidjsonutils.hpp>
 
 #include <reflection/magic.hpp>
 
@@ -79,7 +80,17 @@ namespace agdg {
 	class ManagementConsole : public IManagementConsole {
 	public:
 		ManagementConsole(const rapidjson::Value& d) {
+			if (!d.IsObject())
+				throw std::runtime_error("ManagementConsole: configuration error - expected object");
+
 			configure(*this, d);
+
+			try {
+				RapidJsonUtils::get_array(allowed_ips, d, "allowedIPs");
+			}
+			catch (std::runtime_error& ex) {
+				throw std::runtime_error("ManagementConsole: configuration error - "s + ex.what());
+			}
 		}
 
 		virtual void Init() override {
@@ -115,6 +126,14 @@ namespace agdg {
 				con->OnMessage(d);
 		}
 
+		bool is_allowed_client_addr(const std::string& client_addr) {
+			for (auto& addr : allowed_ips)
+				if (client_addr == addr)
+					return true;
+
+			return false;
+		}
+
 		void OnOpen(connection_hdl hdl) {
 			connection_ptr con = server.get_con_from_hdl(hdl);
 			con->set_message_handler(bind(&ManagementConsole::ForwardMessage, con.get(), _1, _2));
@@ -136,15 +155,15 @@ namespace agdg {
 			connection_ptr con = server.get_con_from_hdl(hdl);
 
 			auto& socket = con->get_raw_socket();
-			auto hostname = socket.remote_endpoint().address().to_string();
+			auto client_addr = socket.remote_endpoint().address().to_string();
 
-			// Only allow localhost connections
-			if (hostname == "127.0.0.1" || hostname == "::1") {
-				g_log->Log("ManagementConsole: ACCEPTING connection from %s", hostname.c_str());
+			// Only allow trusted connections
+			if (is_allowed_client_addr(client_addr)) {
+				g_log->Log("ManagementConsole: ACCEPTING connection from %s", client_addr.c_str());
 				return true;
 			}
 
-			g_log->Log("ManagementConsole: REJECTING connection from %s", hostname.c_str());
+			g_log->Log("ManagementConsole: REJECTING connection from %s", client_addr.c_str());
 			return false;
 		}
 
@@ -152,6 +171,7 @@ namespace agdg {
 		Server server;
 
 		int listenPort;
+		std::vector<std::string> allowed_ips;
 
 		REFL_BEGIN("ManagementConsole", 1)
 			REFL_MUST_CONFIG(listenPort)

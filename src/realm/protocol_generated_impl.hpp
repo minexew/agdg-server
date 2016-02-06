@@ -44,6 +44,15 @@ bool CPlayerMovement::Encode(std::ostream& out) {
     return true;
 }
 
+bool CPong::Decode(const uint8_t* buffer, size_t length) {
+    return true;
+}
+
+bool CPong::Encode(std::ostream& out) {
+    Begin(out, kCPong);
+    return true;
+}
+
 bool CChatSay::Decode(const uint8_t* buffer, size_t length) {
     if (!Read(buffer, length, text)) return false;
     return true;
@@ -127,6 +136,15 @@ bool SZoneState::Encode(std::ostream& out) {
     if (!Write(out, entities[i].dir)) return false;
     }
 
+    return true;
+}
+
+bool SPing::Decode(const uint8_t* buffer, size_t length) {
+    return true;
+}
+
+bool SPing::Encode(std::ostream& out) {
+    Begin(out, kSPing);
     return true;
 }
 

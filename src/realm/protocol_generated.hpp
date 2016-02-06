@@ -2,10 +2,12 @@ enum { kCHello = 1 };
 enum { kCEnterWorld = 2 };
 enum { kCZoneLoaded = 3 };
 enum { kCPlayerMovement = 4 };
+enum { kCPong = 5 };
 enum { kCChatSay = 30 };
 enum { kSHello = 1 };
 enum { kSLoadZone = 2 };
 enum { kSZoneState = 3 };
+enum { kSPing = 4 };
 enum { kSEntitySpawn = 20 };
 enum { kSEntityDespawn = 21 };
 enum { kSEntityUpdate = 22 };
@@ -32,6 +34,10 @@ struct CPlayerMovement {
     glm::vec3	dir;
     glm::vec3	velocity;
 
+    bool Decode(const uint8_t* buffer, size_t length);
+    bool Encode(std::ostream& out);
+};
+struct CPong {
     bool Decode(const uint8_t* buffer, size_t length);
     bool Encode(std::ostream& out);
 };
@@ -68,6 +74,10 @@ struct SZoneState {
     glm::vec3	playerDir;
     std::vector<Entity>	entities;
 
+    bool Decode(const uint8_t* buffer, size_t length);
+    bool Encode(std::ostream& out);
+};
+struct SPing {
     bool Decode(const uint8_t* buffer, size_t length);
     bool Encode(std::ostream& out);
 };

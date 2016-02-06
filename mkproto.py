@@ -215,6 +215,10 @@ messages['CPlayerMovement'] = Message(
 	]
 )
 
+messages['CPong'] = Message(
+	id=5,
+)
+
 messages['CChatSay'] = Message(
 	id=30,
 	data=[
@@ -254,6 +258,10 @@ messages['SZoneState'] = Message(
 			Vec3Field('dir')
 		])
 	]
+)
+
+messages['SPing'] = Message(
+	id=4,
 )
 
 messages['SEntitySpawn'] = Message(
@@ -341,7 +349,9 @@ def generate_cpp_source():
 			print(file=out)
 
 def generate_ts_source():
-	with open('../agdg-client/src/realm-protocol-generated.ts', 'wt') as out:
+	with open('../agdg-client/src/agdg-client/realm-protocol-generated.ts', 'wt') as out:
+		print('/// <reference path="realmprotocol.ts"/>', file=out)
+		print(file=out)
 		print('module RealmProtocol {', file=out)
 		print('export class RealmProtocol extends RealmProtocolBase {', file=out)
 

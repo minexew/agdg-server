@@ -35,6 +35,9 @@ namespace agdg {
 	typedef Server::connection_ptr connection_ptr;
 	typedef Server::message_ptr message_ptr;
 
+	enum { kPingInterval = 5000 };
+	enum { kPingTimeout = 1000 };
+
 	void escape_html(const std::string& data, std::string& output) {
 		output.reserve(data.size() + data.size() / 4);
 
@@ -78,6 +81,21 @@ namespace agdg {
 		std::vector<uint8_t> bytes;
 	};
 
+	class Ping {
+	public:
+		void arrived();
+		void update(RealmSession& session);
+
+		int get_measured_latency() const { return measured_latency; }
+
+	private:
+		enum class State { not_pinged, first_ping_in_progress, pinged, next_ping_in_progress };
+
+		State state = State::not_pinged;
+		clock_t last_ping = clock();
+		int measured_latency;
+	};
+
 	class RealmSession : private ZoneInstanceListener {
 	public:
 		RealmSession(RealmServer* server, connection_ptr con) : server(server), con(con) {}
@@ -89,6 +107,7 @@ namespace agdg {
 		void handle(CEnterWorld& msg);
 		void handle(CHello& msg);
 		void handle(CPlayerMovement& msg);
+		void handle(CPong& msg);
 		void handle(CZoneLoaded& msg);
 
 		template <typename T>
@@ -109,6 +128,7 @@ namespace agdg {
 
 		RealmServer* server;
 		connection_ptr con;
+		Ping ping;
 
 		ZoneInstance* inst = nullptr;
 		unique_ptr<PlayerCharacter> pc;
@@ -161,6 +181,10 @@ namespace agdg {
 			thread.join();
 		}
 
+		// FIXME: implement
+		virtual void close_server(const std::string& message) override {}
+		virtual void reopen_server() override {}
+
 		//IContentManager* get_content_manager() { return content_mgr.get(); }
 		//IZoneManager* GetZoneManager() { return zoneMgr.get(); }
 		ZoneInstance* get_world_zone() { return world_zone.get(); }
@@ -210,6 +234,31 @@ namespace agdg {
 			REFL_MUST_CONFIG(listenPort)
 		REFL_END
 	};
+
+	void Ping::arrived() {
+		measured_latency = clock() - last_ping;
+		state = State::pinged;
+	}
+
+	void Ping::update(RealmSession& session) {
+		auto current_clock = clock();
+
+		switch (this->state) {
+		case State::not_pinged:
+		case State::pinged:
+			if (current_clock > last_ping + kPingInterval) {
+				session.send(SPing{});
+				last_ping = current_clock;
+			}
+
+		case State::first_ping_in_progress:
+		case State::next_ping_in_progress:
+			if (current_clock > last_ping + kPingTimeout) {
+				// TODO
+			}
+			break;
+		}
+	}
 
 	void RealmSession::close() {
 		if (player_entity) {
@@ -276,6 +325,13 @@ namespace agdg {
 
 		player_entity->set_pos_dir_velocity(msg.pos, msg.dir, msg.velocity);
 		inst->broadcast_entity_update(player_eid, msg.pos, msg.dir, msg.velocity);
+
+		ping.update(*this);
+	}
+
+	void RealmSession::handle(CPong& msg) {
+		ping.arrived();
+		g_log->Log("%s pings in %dms", pc->get_name().c_str(), ping.get_measured_latency());
 	}
 
 	void RealmSession::handle(CZoneLoaded& msg) {
@@ -359,6 +415,7 @@ namespace agdg {
 		handle_message(CHello)
 		handle_message(CEnterWorld)
 		handle_message(CPlayerMovement)
+		handle_message(CPong)
 		handle_message(CZoneLoaded)
 		default:
 			;

@@ -2,7 +2,8 @@
   "services": {
     "management_console": {
       "class":      "IManagementConsole",
-      "listenPort": "9001"
+      "listenPort": "9001",
+      "allowedIPs": ["127.0.0.1", "::1"]
     },
     "login": {
       "class":      "ILoginServer",

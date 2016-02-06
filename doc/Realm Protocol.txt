@@ -26,6 +26,8 @@ CLIENT -> SERVER
 	vec3 dir
 	vec3 velocity
 
+05 Pong
+
 30 Chat Say
 
 	string text
@@ -57,6 +59,8 @@ SERVER -> CLIENT
 		string name
 		vec3 pos
 		vec3 dir
+
+04 Ping
 
 20 Entity Spawn
 
