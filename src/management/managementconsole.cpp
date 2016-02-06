@@ -27,7 +27,12 @@ namespace agdg {
 			if (!command.IsString())
 				return;
 
-			if (strcmp(command.GetString(), "stop") == 0)
+			std::string cmd = command.GetString();
+
+			// FIXME: d["message"] asserts!
+			if (cmd == "close_server")
+				g_serverLifecycle->close_server(d["message"].GetString());
+			else if (cmd == "stop")
 				g_serverLifecycle->Stop();
 		}
 	};
@@ -130,10 +135,11 @@ namespace agdg {
 		bool ValidateHandler(connection_hdl hdl) {
 			connection_ptr con = server.get_con_from_hdl(hdl);
 
-			const auto& hostname = con->get_host();
+			auto& socket = con->get_raw_socket();
+			auto hostname = socket.remote_endpoint().address().to_string();
 
 			// Only allow localhost connections
-			if (hostname == "127.0.0.1" || hostname == "localhost") {
+			if (hostname == "127.0.0.1" || hostname == "::1") {
 				g_log->Log("ManagementConsole: ACCEPTING connection from %s", hostname.c_str());
 				return true;
 			}

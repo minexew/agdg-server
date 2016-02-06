@@ -11,6 +11,7 @@ namespace agdg {
 		// TODO: move this?
 		static std::string GetFileContents(const std::string& path) {
 			std::ifstream ifs(path);
+			// FIXME: what if open fails?
 			return std::string(std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>());
 		}
 

@@ -113,6 +113,20 @@ namespace agdg {
 			con->send(s.GetString());
 		}
 
+		void send_server_closed(std::string& message) {
+			rapidjson::StringBuffer s;
+			rapidjson::Writer<rapidjson::StringBuffer> writer(s);
+
+			writer.StartObject();
+			writer.String("type");
+			writer.String("server_closed");
+			writer.String("message");
+			writer.String(message.c_str(), message.size());
+			writer.EndObject();
+
+			con->send(s.GetString());
+		}
+
 	private:
 		connection_ptr con;
 	};
@@ -163,8 +177,30 @@ namespace agdg {
 			thread.join();
 		}
 
+		virtual void close_server(const std::string& message) override {
+			std::lock_guard<std::mutex> lg(server_closure_message_mutex);
+
+			server_closed = true;
+			server_closure_message = message;
+		}
+
+		virtual void reopen_server() override {
+			server_closed = false;
+		}
+
 		const std::vector<Realm>& GetRealms() const { return realms;  }
 		const std::string& GetServerName() const { return serverName; }
+
+		bool is_server_closed(std::string& message_out) {
+			if (server_closed) {
+				std::lock_guard<std::mutex> lg(server_closure_message_mutex);
+
+				message_out = server_closure_message;
+				return true;
+			}
+			else
+				return false;
+		}
 
 		bool Login(connection_ptr con, const std::string& username, const std::string& password, AccountSnapshot& snapshot_out) {
 			if (!ValidateUsername(username))
@@ -209,6 +245,10 @@ namespace agdg {
 		int listenPort;
 		bool forceAnonymousLogin;
 
+		bool server_closed;
+		std::string server_closure_message;
+		std::mutex server_closure_message_mutex;
+
 		std::vector<Realm> realms;
 
 		REFL_BEGIN("LoginServer", 1)
@@ -226,8 +266,14 @@ namespace agdg {
 				return;
 
 			if (clientVersion == kExpectedClientVersion) {
-				protocol.SendHello(server->GetServerName());
-				this->clientVersion = clientVersion;
+				std::string closure_message;
+
+				if (server->is_server_closed(closure_message))
+					protocol.send_server_closed(closure_message);
+				else {
+					protocol.SendHello(server->GetServerName());
+					this->clientVersion = clientVersion;
+				}
 			}
 			else {
 				protocol.SendReject(kExpectedClientVersion);
@@ -239,7 +285,10 @@ namespace agdg {
 			if (!getString(d, "username", username) || !getString(d, "password", password))
 				return;
 
-			g_log->Log("Logging in user %s from %s (password length %d)", username.c_str(), con->get_host().c_str(), password.size());
+			auto& socket = con->get_raw_socket();
+			auto hostname = socket.remote_endpoint().address().to_string();
+
+			g_log->Log("Logging in user %s from %s (password length %d)", username.c_str(), hostname.c_str(), password.size());
 
 			// FIXME: this really should be done asynchronously
 			AccountSnapshot account_snapshot;

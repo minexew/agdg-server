@@ -9,6 +9,7 @@
 #include <management/managementconsole.hpp>
 #include <realm/realmserver.hpp>
 
+#include <mutex>
 #include <string>
 #include <thread>
 #include <vector>
@@ -48,11 +49,28 @@ namespace agdg {
 				shouldStop = true;
 		}
 
+		virtual void close_server(const std::string& message) {
+			std::lock_guard<std::mutex> lg(services_mutex);
+			g_log->Log("Closing server with reason '%s'", message.c_str());
+
+			for (auto& s : services)
+				s->close_server(message);
+		}
+
+		virtual void reopen_server() {
+			std::lock_guard<std::mutex> lg(services_mutex);
+			g_log->Log("Reopening server");
+
+			for (auto& s : services)
+				s->reopen_server();
+		}
+
 	private:
 		void DoStop() {
 			if (!isStarted)
 				return;
 
+			std::lock_guard<std::mutex> lg(services_mutex);
 			g_log->Log("Stopping services");
 
 			for (auto& s : services)
@@ -77,6 +95,7 @@ namespace agdg {
 		}
 
 		std::vector<std::unique_ptr<IService>> services;
+		std::mutex services_mutex;
 
 		bool isStarted = false;
 		bool shouldStop = false;
