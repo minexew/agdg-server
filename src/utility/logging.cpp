@@ -14,6 +14,8 @@
 #endif
 
 namespace agdg {
+	using std::chrono::steady_clock;
+
 #ifdef _WIN32
 	class ConsoleColors {
 	public:
@@ -61,15 +63,15 @@ namespace agdg {
 			va_list args;
 			va_start(args, format);
 
-			auto ts = clock();
-			float t = ts / (float)CLOCKS_PER_SEC;
+			auto now = steady_clock::now();
+			auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(now - start);
 
 			char buffer[2048];
 			vsnprintf(buffer, sizeof(buffer), format, args);
-			AddMessage(ts, buffer);
+			AddMessage(timestamp.count(), buffer);
 
 			s_consoleColors.SetGrey();
-			printf("[%9.3f]\t", t);
+			printf("[%6d.%03d]\t", (int)(timestamp.count() / 1000), (int)(timestamp.count() % 1000));
 
 			s_consoleColors.SetWhite();
 			puts(buffer);
@@ -98,6 +100,8 @@ namespace agdg {
 		}
 
 		enum { kMaxLogSize = 50 };
+
+		steady_clock::time_point start = steady_clock::now();
 
 		std::list<LogEntry> logEntries;
 		std::mutex mutex;

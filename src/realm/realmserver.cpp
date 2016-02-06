@@ -24,6 +24,7 @@
 // Maybe use fixed-size buffers in some cases
 
 namespace agdg {
+	using namespace std::chrono;
 	using websocketpp::connection_hdl;
 	using websocketpp::lib::placeholders::_1;
 	using websocketpp::lib::placeholders::_2;
@@ -35,8 +36,8 @@ namespace agdg {
 	typedef Server::connection_ptr connection_ptr;
 	typedef Server::message_ptr message_ptr;
 
-	enum { kPingInterval = 5000 };
-	enum { kPingTimeout = 1000 };
+	static const auto kPingInterval = milliseconds(5000);
+	static const auto kPingTimeout = milliseconds(1000);
 
 	void escape_html(const std::string& data, std::string& output) {
 		output.reserve(data.size() + data.size() / 4);
@@ -86,14 +87,14 @@ namespace agdg {
 		void arrived();
 		void update(RealmSession& session);
 
-		int get_measured_latency() const { return measured_latency; }
+		auto get_measured_latency() const { return measured_latency; }
 
 	private:
 		enum class State { not_pinged, first_ping_in_progress, pinged, next_ping_in_progress };
 
 		State state = State::not_pinged;
-		clock_t last_ping = clock();
-		int measured_latency;
+		steady_clock::time_point last_ping;
+		milliseconds measured_latency;
 	};
 
 	class RealmSession : private ZoneInstanceListener {
@@ -236,17 +237,16 @@ namespace agdg {
 	};
 
 	void Ping::arrived() {
-		measured_latency = clock() - last_ping;
+		measured_latency = duration_cast<milliseconds>(steady_clock::now() - last_ping);
 		state = State::pinged;
 	}
 
 	void Ping::update(RealmSession& session) {
-		auto current_clock = clock();
+		auto current_clock = steady_clock::now();
 
 		switch (this->state) {
-		case State::not_pinged:
 		case State::pinged:
-			if (current_clock > last_ping + kPingInterval) {
+			if (state == State::not_pinged || current_clock > last_ping + kPingInterval) {
 				session.send(SPing{});
 				last_ping = current_clock;
 			}
