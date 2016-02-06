@@ -9,7 +9,7 @@ namespace agdg {
 	public:
 		ZoneInstanceImpl(IZone* zone) : zone(zone) {}
 
-		virtual int add_entity(Entity* entity) {
+		virtual int add_entity(Entity* entity) override {
 			int eid = next_eid++;
 			entities[eid] = entity;
 
@@ -18,17 +18,17 @@ namespace agdg {
 			return eid;
 		}
 
-		virtual void remove_entity(int eid) {
+		virtual void remove_entity(int eid) override {
 			entities.erase(eid);
 
 			broadcast_entity_despawn(eid);
 		}
 
-		virtual void subscribe(ZoneInstanceListener* listener) {
+		virtual void subscribe(ZoneInstanceListener* listener) override{
 			listeners.push_back(listener);
 		}
 
-		virtual void unsubscribe(ZoneInstanceListener* listener) {
+		virtual void unsubscribe(ZoneInstanceListener* listener) override {
 			listeners.erase(std::remove(listeners.begin(), listeners.end(), listener), listeners.end());
 		}
 
@@ -37,16 +37,16 @@ namespace agdg {
 				listener->on_chat(eid, text);
 		}
 
-		virtual void broadcast_entity_update(int eid, const glm::vec3& pos, const glm::vec3& dir, const glm::vec3& velocity) {
+		virtual void broadcast_entity_update(int eid, const glm::vec3& pos, const glm::vec3& dir, const glm::vec3& velocity, int half_latency) override {
 			for (auto listener : listeners)
-				listener->on_entity_update(eid, pos, dir, velocity);
+				listener->on_entity_update(eid, pos, dir, velocity, half_latency);
 		}
 
-		virtual IZone* get_zone() {
+		virtual IZone* get_zone() override {
 			return zone;
 		}
 
-		virtual void iterate_entities(std::function<void(int eid, Entity* entity)> callback) {
+		virtual void iterate_entities(std::function<void(int eid, Entity* entity)> callback) override {
 			for (auto kv : entities) {
 				callback(kv.first, kv.second);
 			}

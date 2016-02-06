@@ -64,7 +64,7 @@ SERVER -> CLIENT
 
 20 Entity Spawn
 
-	uint32 eid
+	int32 eid
 	uint32 flags
 	string name
 	vec3 pos
@@ -72,16 +72,18 @@ SERVER -> CLIENT
 
 21 Entity Despawn
 
-	uint32 eid
+	int32 eid
 
 22 Entity Update
 
-	uint32 eid
+	int32 eid
 	vec3 pos
 	vec3 dir
 	vec3 velocity
+	uint32 latency		-- estimated latency in ms
+						   e.g. a value of 50 means the movement started about 50ms ago
 
 30 Chat Say
 
-	uint32 eid
+	int32 eid
 	string text

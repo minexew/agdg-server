@@ -83,7 +83,7 @@ struct SPing {
 };
 struct SEntitySpawn {
     struct Entity {
-    uint32_t	eid;
+    int32_t	eid;
     uint32_t	flags;
     std::string	name;
     glm::vec3	pos;
@@ -95,22 +95,23 @@ struct SEntitySpawn {
     bool Encode(std::ostream& out) const;
 };
 struct SEntityDespawn {
-    uint32_t	eid;
+    int32_t	eid;
 
     bool Decode(const uint8_t* buffer, size_t length);
     bool Encode(std::ostream& out) const;
 };
 struct SEntityUpdate {
-    uint32_t	eid;
+    int32_t	eid;
     glm::vec3	pos;
     glm::vec3	dir;
     glm::vec3	velocity;
+    uint32_t	latency;
 
     bool Decode(const uint8_t* buffer, size_t length);
     bool Encode(std::ostream& out) const;
 };
 struct SChatSay {
-    uint32_t	eid;
+    int32_t	eid;
     std::string	text;
 
     bool Decode(const uint8_t* buffer, size_t length);

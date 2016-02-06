@@ -19,6 +19,9 @@ target_include_directories(agdgserverd PUBLIC src
     dependencies/websocketpp
 )
 
-if(LINUX)
-	target_link_libraries(agdgserverd pthread)
+if(UNIX)
+	if (NOT APPLE)
+		set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++ -s")
+		target_link_libraries(agdgserverd pthread)
+	endif()
 endif()

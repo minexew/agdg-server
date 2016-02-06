@@ -39,6 +39,8 @@ namespace agdg {
 	static const auto kPingInterval = milliseconds(5000);
 	static const auto kPingTimeout = milliseconds(1000);
 
+	enum { kDefaultAssumedLatency = 200 };
+
 	void escape_html(const std::string& data, std::string& output) {
 		output.reserve(data.size() + data.size() / 4);
 
@@ -125,11 +127,13 @@ namespace agdg {
 		virtual void on_chat(int eid, const std::string& text) override;
 		virtual void on_entity_despawn(int eid) override;
 		virtual void on_entity_spawn(int eid, Entity* entity, const glm::vec3& pos, const glm::vec3& dir) override;
-		virtual void on_entity_update(int eid, const glm::vec3& pos, const glm::vec3& dir, const glm::vec3& velocity) override;
+		virtual void on_entity_update(int eid, const glm::vec3& pos, const glm::vec3& dir, const glm::vec3& velocity, int half_latency) override;
 
 		RealmServer* server;
 		connection_ptr con;
+
 		Ping ping;
+		int client_latency = kDefaultAssumedLatency;
 
 		ZoneInstance* inst = nullptr;
 		unique_ptr<PlayerCharacter> pc;
@@ -244,12 +248,16 @@ namespace agdg {
 	void Ping::update(RealmSession& session) {
 		auto current_clock = steady_clock::now();
 
-		switch (this->state) {
+		switch (state) {
+		case State::not_pinged:
 		case State::pinged:
 			if (state == State::not_pinged || current_clock > last_ping + kPingInterval) {
 				session.send(SPing{});
 				last_ping = current_clock;
+
+				state = (state == State::not_pinged ? State::first_ping_in_progress : State::next_ping_in_progress);
 			}
+			break;
 
 		case State::first_ping_in_progress:
 		case State::next_ping_in_progress:
@@ -324,14 +332,16 @@ namespace agdg {
 			return;
 
 		player_entity->set_pos_dir_velocity(msg.pos, msg.dir, msg.velocity);
-		inst->broadcast_entity_update(player_eid, msg.pos, msg.dir, msg.velocity);
+		inst->broadcast_entity_update(player_eid, msg.pos, msg.dir, msg.velocity, client_latency / 2);
 
 		ping.update(*this);
 	}
 
 	void RealmSession::handle(CPong& msg) {
 		ping.arrived();
-		g_log->Log("%s pings in %dms", pc->get_name().c_str(), ping.get_measured_latency());
+		client_latency = (int)ping.get_measured_latency().count();
+
+		g_log->Log("%s has a latency of %dms", pc->get_name().c_str(), client_latency);
 	}
 
 	void RealmSession::handle(CZoneLoaded& msg) {
@@ -388,13 +398,14 @@ namespace agdg {
 		send(msg);
 	}
 
-	void RealmSession::on_entity_update(int eid, const glm::vec3& pos, const glm::vec3& dir, const glm::vec3& velocity) {
+	void RealmSession::on_entity_update(int eid, const glm::vec3& pos, const glm::vec3& dir, const glm::vec3& velocity, int half_latency) {
 		if (eid != player_eid) {
 			SEntityUpdate msg;
 			msg.eid = eid;
 			msg.pos = pos;
 			msg.dir = dir;
 			msg.velocity = velocity;
+			msg.latency = half_latency + this->client_latency / 2;
 			send(msg);
 		}
 	}

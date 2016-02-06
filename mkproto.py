@@ -268,7 +268,7 @@ messages['SEntitySpawn'] = Message(
 	id=20,
 	data=[
 		CompoundField('entity', 'Entity', data=[
-			Uint32Field('eid'),
+			Int32Field('eid'),
 			Uint32Field('flags'),
 			StringField('name'),
 			Vec3Field('pos'),
@@ -280,24 +280,25 @@ messages['SEntitySpawn'] = Message(
 messages['SEntityDespawn'] = Message(
 	id=21,
 	data=[
-		Uint32Field('eid'),
+		Int32Field('eid'),
 	],
 )
 
 messages['SEntityUpdate'] = Message(
 	id=22,
 	data=[
-		Uint32Field('eid'),
+		Int32Field('eid'),
 		Vec3Field('pos'),
 		Vec3Field('dir'),
-		Vec3Field('velocity')
+		Vec3Field('velocity'),
+		Uint32Field('latency'),
 	]
 )
 
 messages['SChatSay'] = Message(
 	id=30,
 	data=[
-		Uint32Field('eid'),
+		Int32Field('eid'),
 		StringField('text'),
 	],
 )
