@@ -29,7 +29,7 @@ namespace agdg {
 		static std::string HashToHexString(const T& hash) {
 			char string[sizeof(hash.bytes) * 2 + 1];
 
-			for (int i = 0; i < sizeof(hash.bytes); i++)
+			for (size_t i = 0; i < sizeof(hash.bytes); i++)
 				snprintf(string + i * 2, 3, "%02x", hash.bytes[i]);
 
 			return string;

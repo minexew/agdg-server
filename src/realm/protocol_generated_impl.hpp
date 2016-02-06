@@ -3,7 +3,7 @@ bool CHello::Decode(const uint8_t* buffer, size_t length) {
     return true;
 }
 
-bool CHello::Encode(std::ostream& out) {
+bool CHello::Encode(std::ostream& out) const {
     Begin(out, kCHello);
     if (!Write(out, token)) return false;
     return true;
@@ -14,7 +14,7 @@ bool CEnterWorld::Decode(const uint8_t* buffer, size_t length) {
     return true;
 }
 
-bool CEnterWorld::Encode(std::ostream& out) {
+bool CEnterWorld::Encode(std::ostream& out) const {
     Begin(out, kCEnterWorld);
     if (!Write(out, characterName)) return false;
     return true;
@@ -24,7 +24,7 @@ bool CZoneLoaded::Decode(const uint8_t* buffer, size_t length) {
     return true;
 }
 
-bool CZoneLoaded::Encode(std::ostream& out) {
+bool CZoneLoaded::Encode(std::ostream& out) const {
     Begin(out, kCZoneLoaded);
     return true;
 }
@@ -36,7 +36,7 @@ bool CPlayerMovement::Decode(const uint8_t* buffer, size_t length) {
     return true;
 }
 
-bool CPlayerMovement::Encode(std::ostream& out) {
+bool CPlayerMovement::Encode(std::ostream& out) const {
     Begin(out, kCPlayerMovement);
     if (!Write(out, pos)) return false;
     if (!Write(out, dir)) return false;
@@ -48,7 +48,7 @@ bool CPong::Decode(const uint8_t* buffer, size_t length) {
     return true;
 }
 
-bool CPong::Encode(std::ostream& out) {
+bool CPong::Encode(std::ostream& out) const {
     Begin(out, kCPong);
     return true;
 }
@@ -58,7 +58,7 @@ bool CChatSay::Decode(const uint8_t* buffer, size_t length) {
     return true;
 }
 
-bool CChatSay::Encode(std::ostream& out) {
+bool CChatSay::Encode(std::ostream& out) const {
     Begin(out, kCChatSay);
     if (!Write(out, text)) return false;
     return true;
@@ -76,7 +76,7 @@ bool SHello::Decode(const uint8_t* buffer, size_t length) {
     return true;
 }
 
-bool SHello::Encode(std::ostream& out) {
+bool SHello::Encode(std::ostream& out) const {
     Begin(out, kSHello);
     if (!Write<uint32_t>(out, characters.size())) return false;
 
@@ -93,7 +93,7 @@ bool SLoadZone::Decode(const uint8_t* buffer, size_t length) {
     return true;
 }
 
-bool SLoadZone::Encode(std::ostream& out) {
+bool SLoadZone::Encode(std::ostream& out) const {
     Begin(out, kSLoadZone);
     if (!Write(out, zoneName)) return false;
     if (!Write(out, zoneRef)) return false;
@@ -120,7 +120,7 @@ bool SZoneState::Decode(const uint8_t* buffer, size_t length) {
     return true;
 }
 
-bool SZoneState::Encode(std::ostream& out) {
+bool SZoneState::Encode(std::ostream& out) const {
     Begin(out, kSZoneState);
     if (!Write(out, playerEid)) return false;
     if (!Write(out, playerName)) return false;
@@ -143,7 +143,7 @@ bool SPing::Decode(const uint8_t* buffer, size_t length) {
     return true;
 }
 
-bool SPing::Encode(std::ostream& out) {
+bool SPing::Encode(std::ostream& out) const {
     Begin(out, kSPing);
     return true;
 }
@@ -157,7 +157,7 @@ bool SEntitySpawn::Decode(const uint8_t* buffer, size_t length) {
     return true;
 }
 
-bool SEntitySpawn::Encode(std::ostream& out) {
+bool SEntitySpawn::Encode(std::ostream& out) const {
     Begin(out, kSEntitySpawn);
     if (!Write(out, entity.eid)) return false;
     if (!Write(out, entity.flags)) return false;
@@ -172,7 +172,7 @@ bool SEntityDespawn::Decode(const uint8_t* buffer, size_t length) {
     return true;
 }
 
-bool SEntityDespawn::Encode(std::ostream& out) {
+bool SEntityDespawn::Encode(std::ostream& out) const {
     Begin(out, kSEntityDespawn);
     if (!Write(out, eid)) return false;
     return true;
@@ -186,7 +186,7 @@ bool SEntityUpdate::Decode(const uint8_t* buffer, size_t length) {
     return true;
 }
 
-bool SEntityUpdate::Encode(std::ostream& out) {
+bool SEntityUpdate::Encode(std::ostream& out) const {
     Begin(out, kSEntityUpdate);
     if (!Write(out, eid)) return false;
     if (!Write(out, pos)) return false;
@@ -201,7 +201,7 @@ bool SChatSay::Decode(const uint8_t* buffer, size_t length) {
     return true;
 }
 
-bool SChatSay::Encode(std::ostream& out) {
+bool SChatSay::Encode(std::ostream& out) const {
     Begin(out, kSChatSay);
     if (!Write(out, eid)) return false;
     if (!Write(out, text)) return false;

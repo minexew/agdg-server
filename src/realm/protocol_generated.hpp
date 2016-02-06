@@ -17,17 +17,17 @@ struct CHello {
     SHA3_224	token;
 
     bool Decode(const uint8_t* buffer, size_t length);
-    bool Encode(std::ostream& out);
+    bool Encode(std::ostream& out) const;
 };
 struct CEnterWorld {
     std::string	characterName;
 
     bool Decode(const uint8_t* buffer, size_t length);
-    bool Encode(std::ostream& out);
+    bool Encode(std::ostream& out) const;
 };
 struct CZoneLoaded {
     bool Decode(const uint8_t* buffer, size_t length);
-    bool Encode(std::ostream& out);
+    bool Encode(std::ostream& out) const;
 };
 struct CPlayerMovement {
     glm::vec3	pos;
@@ -35,30 +35,30 @@ struct CPlayerMovement {
     glm::vec3	velocity;
 
     bool Decode(const uint8_t* buffer, size_t length);
-    bool Encode(std::ostream& out);
+    bool Encode(std::ostream& out) const;
 };
 struct CPong {
     bool Decode(const uint8_t* buffer, size_t length);
-    bool Encode(std::ostream& out);
+    bool Encode(std::ostream& out) const;
 };
 struct CChatSay {
     std::string	text;
 
     bool Decode(const uint8_t* buffer, size_t length);
-    bool Encode(std::ostream& out);
+    bool Encode(std::ostream& out) const;
 };
 struct SHello {
     std::vector<std::string>	characters;
 
     bool Decode(const uint8_t* buffer, size_t length);
-    bool Encode(std::ostream& out);
+    bool Encode(std::ostream& out) const;
 };
 struct SLoadZone {
     std::string	zoneName;
     SHA3_224	zoneRef;
 
     bool Decode(const uint8_t* buffer, size_t length);
-    bool Encode(std::ostream& out);
+    bool Encode(std::ostream& out) const;
 };
 struct SZoneState {
     struct Entity {
@@ -75,11 +75,11 @@ struct SZoneState {
     std::vector<Entity>	entities;
 
     bool Decode(const uint8_t* buffer, size_t length);
-    bool Encode(std::ostream& out);
+    bool Encode(std::ostream& out) const;
 };
 struct SPing {
     bool Decode(const uint8_t* buffer, size_t length);
-    bool Encode(std::ostream& out);
+    bool Encode(std::ostream& out) const;
 };
 struct SEntitySpawn {
     struct Entity {
@@ -92,13 +92,13 @@ struct SEntitySpawn {
     Entity	entity;
 
     bool Decode(const uint8_t* buffer, size_t length);
-    bool Encode(std::ostream& out);
+    bool Encode(std::ostream& out) const;
 };
 struct SEntityDespawn {
     uint32_t	eid;
 
     bool Decode(const uint8_t* buffer, size_t length);
-    bool Encode(std::ostream& out);
+    bool Encode(std::ostream& out) const;
 };
 struct SEntityUpdate {
     uint32_t	eid;
@@ -107,12 +107,12 @@ struct SEntityUpdate {
     glm::vec3	velocity;
 
     bool Decode(const uint8_t* buffer, size_t length);
-    bool Encode(std::ostream& out);
+    bool Encode(std::ostream& out) const;
 };
 struct SChatSay {
     uint32_t	eid;
     std::string	text;
 
     bool Decode(const uint8_t* buffer, size_t length);
-    bool Encode(std::ostream& out);
+    bool Encode(std::ostream& out) const;
 };

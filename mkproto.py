@@ -323,7 +323,7 @@ def generate_cpp_header():
 
 			if len(msg.data): print(file=out)
 			print('    bool Decode(const uint8_t* buffer, size_t length);', file=out)
-			print('    bool Encode(std::ostream& out);', file=out)
+			print('    bool Encode(std::ostream& out) const;', file=out)
 
 			print('};', file=out)
 
@@ -338,7 +338,7 @@ def generate_cpp_source():
 			print('    return true;', file=out)
 			print('}', file=out)
 			print(file=out)
-			print('bool %s::Encode(std::ostream& out) {' % name, file=out)
+			print('bool %s::Encode(std::ostream& out) const {' % name, file=out)
 			print('    Begin(out, k%s);' % name, file=out)
 
 			for field in msg.data:

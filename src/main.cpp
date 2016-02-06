@@ -35,11 +35,10 @@ namespace agdg {
 			g_serverLifecycle->Start();
 			g_serverLifecycle->Run();
 		}
-		catch (websocketpp::exception const & e) {
+		catch (const websocketpp::exception& e) {
 			std::cout << e.what() << std::endl;
-			std::cin.get();
 		}
-		catch (std::exception ex) {
+		catch (const std::exception& ex) {
 			std::cerr << ex.what() << std::endl;
 		}
 		catch (...) {

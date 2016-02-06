@@ -18,3 +18,7 @@ target_include_directories(agdgserverd PUBLIC src
     dependencies/reflector/include
     dependencies/websocketpp
 )
+
+if(LINUX)
+	target_link_libraries(agdgserverd pthread)
+endif()

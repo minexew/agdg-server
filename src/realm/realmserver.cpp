@@ -111,7 +111,7 @@ namespace agdg {
 		void handle(CZoneLoaded& msg);
 
 		template <typename T>
-		void send(T& message) {
+		void send(const T& message) {
 			//messageBuffer.Clear();
 			messageBuf.Clear();
 			std::ostream os(&messageBuf);

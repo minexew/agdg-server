@@ -31,10 +31,6 @@ namespace agdg {
 			}
 		}
 
-		template <typename T>
-		static void get_value(T& output, const rapidjson::Value& value);
-
-		template <>
 		static void get_value(std::string& output, const rapidjson::Value& value) {
 			if (!value.IsString())
 				throw std::runtime_error("expected string");
