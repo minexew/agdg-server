@@ -32,7 +32,6 @@ bool CZoneLoaded::Encode(std::ostream& out) const {
 bool CPlayerMovement::Decode(const uint8_t* buffer, size_t length) {
     if (!Read(buffer, length, pos)) return false;
     if (!Read(buffer, length, dir)) return false;
-    if (!Read(buffer, length, velocity)) return false;
     return true;
 }
 
@@ -40,7 +39,6 @@ bool CPlayerMovement::Encode(std::ostream& out) const {
     Begin(out, kCPlayerMovement);
     if (!Write(out, pos)) return false;
     if (!Write(out, dir)) return false;
-    if (!Write(out, velocity)) return false;
     return true;
 }
 
@@ -182,7 +180,6 @@ bool SEntityUpdate::Decode(const uint8_t* buffer, size_t length) {
     if (!Read(buffer, length, eid)) return false;
     if (!Read(buffer, length, pos)) return false;
     if (!Read(buffer, length, dir)) return false;
-    if (!Read(buffer, length, velocity)) return false;
     if (!Read(buffer, length, latency)) return false;
     return true;
 }
@@ -192,7 +189,6 @@ bool SEntityUpdate::Encode(std::ostream& out) const {
     if (!Write(out, eid)) return false;
     if (!Write(out, pos)) return false;
     if (!Write(out, dir)) return false;
-    if (!Write(out, velocity)) return false;
     if (!Write(out, latency)) return false;
     return true;
 }

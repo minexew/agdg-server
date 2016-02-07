@@ -32,7 +32,6 @@ struct CZoneLoaded {
 struct CPlayerMovement {
     glm::vec3	pos;
     glm::vec3	dir;
-    glm::vec3	velocity;
 
     bool Decode(const uint8_t* buffer, size_t length);
     bool Encode(std::ostream& out) const;
@@ -104,7 +103,6 @@ struct SEntityUpdate {
     int32_t	eid;
     glm::vec3	pos;
     glm::vec3	dir;
-    glm::vec3	velocity;
     uint32_t	latency;
 
     bool Decode(const uint8_t* buffer, size_t length);

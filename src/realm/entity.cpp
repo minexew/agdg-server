@@ -10,10 +10,9 @@ namespace agdg {
 		virtual const glm::vec3& get_dir() { return dir; }
 		virtual const glm::vec3& get_pos() { return pos; }
 
-		virtual void set_pos_dir_velocity(const glm::vec3& pos, const glm::vec3& dir, const glm::vec3& velocity) override {
+		virtual void set_pos_dir(const glm::vec3& pos, const glm::vec3& dir) override {
 			this->pos = pos;
 			this->dir = dir;
-			this->velocity = velocity;
 		}
 
 	private:

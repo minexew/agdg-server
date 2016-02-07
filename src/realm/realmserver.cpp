@@ -127,7 +127,7 @@ namespace agdg {
 		virtual void on_chat(int eid, const std::string& text) override;
 		virtual void on_entity_despawn(int eid) override;
 		virtual void on_entity_spawn(int eid, Entity* entity, const glm::vec3& pos, const glm::vec3& dir) override;
-		virtual void on_entity_update(int eid, const glm::vec3& pos, const glm::vec3& dir, const glm::vec3& velocity, int half_latency) override;
+		virtual void on_entity_update(int eid, const glm::vec3& pos, const glm::vec3& dir, int half_latency) override;
 
 		RealmServer* server;
 		connection_ptr con;
@@ -164,6 +164,7 @@ namespace agdg {
 
 		virtual void Init() override {
 			server.init_asio();
+			server.set_reuse_addr(true);
 
 			server.clear_access_channels(websocketpp::log::alevel::all);
 
@@ -331,8 +332,8 @@ namespace agdg {
 		if (!inst || !player_entity)
 			return;
 
-		player_entity->set_pos_dir_velocity(msg.pos, msg.dir, msg.velocity);
-		inst->broadcast_entity_update(player_eid, msg.pos, msg.dir, msg.velocity, client_latency / 2);
+		player_entity->set_pos_dir(msg.pos, msg.dir);
+		inst->broadcast_entity_update(player_eid, msg.pos, msg.dir, client_latency / 2);
 
 		ping.update(*this);
 	}
@@ -398,13 +399,12 @@ namespace agdg {
 		send(msg);
 	}
 
-	void RealmSession::on_entity_update(int eid, const glm::vec3& pos, const glm::vec3& dir, const glm::vec3& velocity, int half_latency) {
+	void RealmSession::on_entity_update(int eid, const glm::vec3& pos, const glm::vec3& dir, int half_latency) {
 		if (eid != player_eid) {
 			SEntityUpdate msg;
 			msg.eid = eid;
 			msg.pos = pos;
 			msg.dir = dir;
-			msg.velocity = velocity;
 			msg.latency = half_latency + this->client_latency / 2;
 			send(msg);
 		}

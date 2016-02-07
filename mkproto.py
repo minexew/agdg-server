@@ -211,7 +211,6 @@ messages['CPlayerMovement'] = Message(
 	data=[
 		Vec3Field('pos'),
 		Vec3Field('dir'),
-		Vec3Field('velocity')
 	]
 )
 
@@ -290,7 +289,6 @@ messages['SEntityUpdate'] = Message(
 		Int32Field('eid'),
 		Vec3Field('pos'),
 		Vec3Field('dir'),
-		Vec3Field('velocity'),
 		Uint32Field('latency'),
 	]
 )

@@ -24,7 +24,6 @@ CLIENT -> SERVER
 
 	vec3 pos
 	vec3 dir
-	vec3 velocity
 
 05 Pong
 
@@ -79,9 +78,9 @@ SERVER -> CLIENT
 	int32 eid
 	vec3 pos
 	vec3 dir
-	vec3 velocity
 	uint32 latency		-- estimated latency in ms
 						   e.g. a value of 50 means the movement started about 50ms ago
+						   (currently not used for anything)
 
 30 Chat Say
 

@@ -37,9 +37,9 @@ namespace agdg {
 				listener->on_chat(eid, text);
 		}
 
-		virtual void broadcast_entity_update(int eid, const glm::vec3& pos, const glm::vec3& dir, const glm::vec3& velocity, int half_latency) override {
+		virtual void broadcast_entity_update(int eid, const glm::vec3& pos, const glm::vec3& dir, int half_latency) override {
 			for (auto listener : listeners)
-				listener->on_entity_update(eid, pos, dir, velocity, half_latency);
+				listener->on_entity_update(eid, pos, dir, half_latency);
 		}
 
 		virtual IZone* get_zone() override {

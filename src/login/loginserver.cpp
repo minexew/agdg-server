@@ -156,6 +156,7 @@ namespace agdg {
 
 		virtual void Init() override {
 			server.init_asio();
+			server.set_reuse_addr(true);
 
 			server.clear_access_channels(websocketpp::log::alevel::all);
 
