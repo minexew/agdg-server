@@ -156,6 +156,18 @@ class StringField(Field):
 	def write_ts_encode(self, out, rename=None):
 		print('    offset += this.encodeString(offset, %s);' % (rename or self.name), file=out)
 
+class BoolField(Field):
+	def __init__(self, name, repeated=False):
+		super().__init__(name, repeated, cpp_type='bool', ts_type='boolean')
+
+	def write_ts_decode(self, out, rename=None):
+		print('    %s = (dv.getUint8(offset) != 0);' % (rename or self.name), file=out)
+		print('    offset += 4;', file=out)
+
+	def write_ts_encode(self, out, rename=None):
+		print('    this.dv.setUint8(offset, %s ? 1 : 0);' % (rename or self.name), file=out)
+		print('    offset += 4;', file=out)
+
 class Int32Field(Field):
 	def __init__(self, name, repeated=False):
 		super().__init__(name, repeated, cpp_type='int32_t', ts_type='number',
@@ -298,6 +310,7 @@ messages['SChatSay'] = Message(
 	data=[
 		Int32Field('eid'),
 		StringField('text'),
+		BoolField('html'),
 	],
 )
 

@@ -14,7 +14,7 @@ namespace agdg {
 
 	class IZoneManager {
 	public:
-		static unique_ptr<IZoneManager> Create(IContentManager* contentMgr);
+		static unique_ptr<IZoneManager> Create(IContentManager* content_mgr);
 		virtual ~IZoneManager() {}
 
 		virtual IZone* GetZoneById(const std::string& id) = 0;

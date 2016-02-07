@@ -124,7 +124,7 @@ namespace agdg {
 		}
 
 	private:
-		virtual void on_chat(int eid, const std::string& text) override;
+		virtual void on_chat(int eid, const std::string& text, bool html) override;
 		virtual void on_entity_despawn(int eid) override;
 		virtual void on_entity_spawn(int eid, Entity* entity, const glm::vec3& pos, const glm::vec3& dir) override;
 		virtual void on_entity_update(int eid, const glm::vec3& pos, const glm::vec3& dir, int half_latency) override;
@@ -273,7 +273,7 @@ namespace agdg {
 		if (player_entity) {
 			inst->unsubscribe(this);
 			inst->remove_entity(player_eid);
-			inst->broadcast_chat(0, "<b>" + pc->get_name() + "</b> left.");
+			inst->broadcast_chat(0, "<b>" + pc->get_name() + "</b> left.", true);
 
 			// CHECKME: ownership management OK?
 			player_entity.reset();
@@ -284,15 +284,8 @@ namespace agdg {
 		if (!inst || !pc || !player_eid)
 			return;
 
-		std::string trusted_text;
-
-		if (!account_snapshot.trusted)
-			escape_html(msg.text, trusted_text);
-		else
-			trusted_text.swap(msg.text);
-
-		g_log->Log("<%s> %s", pc->get_name().c_str(), trusted_text.c_str());
-		inst->broadcast_chat(player_eid, trusted_text);
+		g_log->Log("<%s> %s", pc->get_name().c_str(), msg.text.c_str());
+		inst->broadcast_chat(player_eid, msg.text, account_snapshot.trusted);
 	}
 
 	void RealmSession::handle(CHello& msg) {
@@ -372,15 +365,15 @@ namespace agdg {
 		reply.playerDir = player_entity->get_dir();
 		send(reply);
 
-		SChatSay hello{ 0, "<strong>Welcome to AGDG MMO.</strong>" };
+		SChatSay hello{ 0, "<strong>Welcome to AGDG MMO.</strong>", true };
 		send(hello);
 
-		inst->broadcast_chat(0, "<strong>" + pc->get_name() + "</strong> joined.");
+		inst->broadcast_chat(0, "<strong>" + pc->get_name() + "</strong> joined.", true);
 		inst->subscribe(this);
 	}
 
-	void RealmSession::on_chat(int eid, const std::string& text) {
-		SChatSay msg{ eid, text };
+	void RealmSession::on_chat(int eid, const std::string& text, bool html) {
+		SChatSay msg{ eid, text, html };
 		send(msg);
 	}
 

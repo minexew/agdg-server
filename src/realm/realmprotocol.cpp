@@ -25,8 +25,25 @@ namespace agdg {
 	}
 
 	template <>
+	bool Read(const uint8_t*& buffer, size_t& length, uint8_t& value_out) {
+		return Read(buffer, length, &value_out, 1);
+	}
+
+	template <>
 	bool Read(const uint8_t*& buffer, size_t& length, uint32_t& value_out) {
 		return Read(buffer, length, &value_out, 4);
+	}
+
+	template <>
+	bool Read(const uint8_t*& buffer, size_t& length, bool& value_out) {
+		uint8_t u8;
+
+		if (Read(buffer, length, &u8, 1)) {
+			value_out = (u8 != 0);
+			return true;
+		}
+		else
+			return false;
 	}
 
 	template <>
@@ -65,6 +82,11 @@ namespace agdg {
 	bool Write<>(std::ostream& out, const uint32_t& value) {
 		out.write(reinterpret_cast<const char*>(&value), 4);
 		return true;
+	}
+
+	template <>
+	bool Write<>(std::ostream& out, const bool& value) {
+		return Write<uint8_t>(out, value ? 1 : 0);
 	}
 
 	template <>

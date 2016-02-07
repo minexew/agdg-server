@@ -19,5 +19,6 @@
       "worldDir":   "world",
       "listenPort": "9003"
     }
-  }
+  },
+  "contentOutputDir": "content"
 }

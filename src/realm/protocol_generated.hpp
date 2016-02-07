@@ -111,6 +111,7 @@ struct SEntityUpdate {
 struct SChatSay {
     int32_t	eid;
     std::string	text;
+    bool	html;
 
     bool Decode(const uint8_t* buffer, size_t length);
     bool Encode(std::ostream& out) const;

@@ -30,7 +30,7 @@ namespace agdg {
 			if (argc >= 2)
 				config_name = argv[1];
 
-			g_config->Init(config_name);
+			g_config->init(config_name);
 
 			g_serverLifecycle->Start();
 			g_serverLifecycle->Run();

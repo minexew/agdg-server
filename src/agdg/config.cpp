@@ -1,6 +1,7 @@
 #include <agdg/config.hpp>
 
 #include <rapidjson/filereadstream.h>
+#include <utility/rapidjsonutils.hpp>
 
 #include <fstream>
 
@@ -23,13 +24,13 @@ namespace agdg {
 
 	class Config : public IConfig {
 	public:
-		virtual void Init(const char* master_config_or_null) override {
+		virtual void init(const char* master_config_or_null) override {
 			static const std::string config_dir = "config/";
 
 			LoadConfig(master, master_config_or_null ? master_config_or_null : (config_dir + "master.json"), config_dir + "master.default.json");
 		}
 
-		virtual void EnumerateServices(std::function<void(const std::string&, const rapidjson::Value&)> callback) override {
+		virtual void enumerate_services(std::function<void(const std::string&, const rapidjson::Value&)> callback) override {
 			const auto& services = master["services"];
 
 			if (!services.IsObject())
@@ -38,6 +39,10 @@ namespace agdg {
 			for (auto it = services.MemberBegin(); it != services.MemberEnd(); it++) {
 				callback(it->name.GetString(), it->value);
 			}
+		}
+
+		virtual void get_value(std::string& output, const char* field_name) override {
+			RapidJsonUtils::get_value(output, master, field_name);
 		}
 
 	private:

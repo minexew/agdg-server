@@ -32,9 +32,9 @@ namespace agdg {
 			listeners.erase(std::remove(listeners.begin(), listeners.end(), listener), listeners.end());
 		}
 
-		virtual void broadcast_chat(int eid, const std::string& text) override {
+		virtual void broadcast_chat(int eid, const std::string& text, bool html) override {
 			for (auto listener : listeners)
-				listener->on_chat(eid, text);
+				listener->on_chat(eid, text, html);
 		}
 
 		virtual void broadcast_entity_update(int eid, const glm::vec3& pos, const glm::vec3& dir, int half_latency) override {

@@ -31,7 +31,7 @@ namespace agdg {
 			// FIXME: error handling
 			g_log->Log("Starting Services");
 
-			g_config->EnumerateServices([this](const auto& name, const auto& d) {
+			g_config->enumerate_services([this](const auto& name, const auto& d) {
 				auto service = InstantiateService(name, d);
 				service->Init();
 				service->Start();

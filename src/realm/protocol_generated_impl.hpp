@@ -196,6 +196,7 @@ bool SEntityUpdate::Encode(std::ostream& out) const {
 bool SChatSay::Decode(const uint8_t* buffer, size_t length) {
     if (!Read(buffer, length, eid)) return false;
     if (!Read(buffer, length, text)) return false;
+    if (!Read(buffer, length, html)) return false;
     return true;
 }
 
@@ -203,6 +204,7 @@ bool SChatSay::Encode(std::ostream& out) const {
     Begin(out, kSChatSay);
     if (!Write(out, eid)) return false;
     if (!Write(out, text)) return false;
+    if (!Write(out, html)) return false;
     return true;
 }
 

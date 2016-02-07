@@ -1,26 +1,78 @@
 #include <world/contentmanager.hpp>
 
+#include <agdg/config.hpp>
+#include <utility/hashutils.hpp>
+#include <utility/logging.hpp>
+
+#include <rapidjson/writer.h>
+
+#include <fstream>
 #include <unordered_map>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 namespace agdg {
-	class ContentManager : public IContentManager {
-	public:
-		virtual bool GetCachedAsset(const SHA3_224& hash, std::string& data_out) {
-			auto it = cachedAssets.find(hash);
+#ifdef _WIN32
+	static bool file_exists(const char* path) {
+		return GetFileAttributesA(path) != INVALID_FILE_ATTRIBUTES;
+	}
+#else
+	static bool file_exists(const char* path) {
+		FILE* file = fopen(path, "rb");
 
-			if (it == cachedAssets.end())
-				return false;
-
-			data_out = it->second;
+		if (file) {
+			fclose(file);
 			return true;
 		}
+		else
+			return false;
+	}
+#endif
 
-		virtual void CacheAsset(const SHA3_224& hash, const std::string& path, const std::string& content) {
-			cachedAssets[hash] = content;
+	static void put_file_contents(const std::string& path, const uint8_t* bytes, size_t length) {
+		std::ofstream ofs(path);
+
+		if (!ofs.good())
+			throw std::runtime_error("failed to open " + path + " for writing");
+
+		ofs.write((const char*)bytes, length);
+	}
+
+	class ContentManager : public IContentManager {
+	public:
+		ContentManager() {
+			g_config->get_value(content_output_dir, "contentOutputDir");
+		}
+
+		//virtual std::string get_asset_as_string(const std::string& path) override;
+
+		virtual SHA3_224 put(const uint8_t* bytes, size_t length, bool cache) {
+			SHA3_224 hash;
+			HashUtils::hash_bytes(bytes, length, hash);
+
+			std::string filename = content_output_dir + "/" + HashUtils::hash_to_hex_string(hash);
+
+			if (!file_exists(filename.c_str())) {
+				g_log->Log("writing %s", filename.c_str());
+				put_file_contents(filename, bytes, length);
+			}
+
+			return hash;
+		}
+
+		virtual SHA3_224 put(const rapidjson::Document& document, bool cache) override {
+			rapidjson::StringBuffer buf;
+			rapidjson::Writer<rapidjson::StringBuffer> wr(buf);
+
+			document.Accept(wr);
+
+			return put((const uint8_t*) buf.GetString(), buf.GetSize(), cache);
 		}
 
 	protected:
-		std::unordered_map<SHA3_224, std::string> cachedAssets;
+		std::string content_output_dir;
 	};
 
 	unique_ptr<IContentManager> IContentManager::Create() {

@@ -38,7 +38,7 @@ namespace agdg {
 
 			writer.StartObject();
 			writer.String("password_sha3_512");
-			writer.String(HashUtils::StringToSHA3_512Hex(password).c_str());
+			writer.String(HashUtils::string_to_sha3_512_hex_string(password).c_str());
 			writer.EndObject();
 
 			fclose(f);
@@ -64,7 +64,7 @@ namespace agdg {
 
 			getString(d, "password_sha3_512", passwordHash);
 
-			if (HashUtils::StringToSHA3_512Hex(password) != passwordHash) {
+			if (HashUtils::string_to_sha3_512_hex_string(password) != passwordHash) {
 				g_log->Log("rejecting user '%s' from '%s' (invalid password)", username.c_str(), hostname.c_str());
 				return false;
 			}

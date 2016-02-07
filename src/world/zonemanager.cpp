@@ -6,6 +6,7 @@
 #include <utility/rapidjsonutils.hpp>
 
 #include <rapidjson/document.h>
+#include <rapidjson/error/en.h>
 
 #include <memory>
 #include <unordered_map>
@@ -13,32 +14,41 @@
 namespace agdg {
 	class Zone : public IZone {
 	public:
-		Zone(IContentManager* contentMgr, const std::string& path) {
-			// TODO: error handling
-			std::string json = ContentScanner::GetFileContents(path);
-			HashUtils::HashString(json, hash);
-			contentMgr->CacheAsset(hash, path, json);
+		Zone(IContentManager* content_mgr, const std::string& path) {
+			std::string json = ContentScanner::GetFileContents(path); //content_mgr->get_asset_as_string(path);
 
 			rapidjson::Document d;
-			d.Parse(json.c_str());
+			rapidjson::ParseResult ok = d.Parse(json.c_str());
 
-			if (d.GetParseError() != rapidjson::kParseErrorNone)
-				return;
+			if (!ok)
+				throw std::runtime_error(path + ": JSON parse error: " + rapidjson::GetParseError_En(ok.Code()) + " (" + std::to_string(ok.Offset()) + ")");
 
-			getString(d, "name", name);
+			try {
+				RapidJsonUtils::get_value(name, d, "name");
+			}
+			catch (std::runtime_error& ex) {
+				throw std::runtime_error(path + ": format error: "s + ex.what());
+			}
+
+			resolve_dependencies(content_mgr, d);
+			hash = content_mgr->put(d, false);
 		}
 
 		virtual const std::string& GetName() override { return name; }
 		virtual const SHA3_224& GetHash() override { return hash;  }
 
 	private:
+		void resolve_dependencies(IContentManager* content_mgr, rapidjson::Document& d) {
+			d.AddMember("dependencies", rapidjson::Value(rapidjson::kArrayType), d.GetAllocator());
+		}
+
 		std::string name;
 		SHA3_224 hash;
 	};
 
 	class ZoneManager : public IZoneManager {
 	public:
-		ZoneManager(IContentManager* contentMgr) : contentMgr(contentMgr) {}
+		ZoneManager(IContentManager* content_mgr) : content_mgr(content_mgr) {}
 
 		virtual IZone* GetZoneById(const std::string& id) override {
 			auto z = zones.find(id);
@@ -55,17 +65,18 @@ namespace agdg {
 				if (z != zones.end())
 					g_log->Log("replacing zone %s on-the-fly", zoneName.c_str());
 
-				zones[zoneName] = make_unique<Zone>(contentMgr, path);
+				// FIXME: might throw
+				zones[zoneName] = make_unique<Zone>(content_mgr, path);
 			}, ".json");
 		}
 
 	private:
-		IContentManager* contentMgr;
+		IContentManager* content_mgr;
 
 		std::unordered_map<std::string, std::unique_ptr<Zone>> zones;
 	};
 
-	unique_ptr<IZoneManager> IZoneManager::Create(IContentManager* contentMgr) {
-		return make_unique<ZoneManager>(contentMgr);
+	unique_ptr<IZoneManager> IZoneManager::Create(IContentManager* content_mgr) {
+		return make_unique<ZoneManager>(content_mgr);
 	}
 }

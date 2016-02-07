@@ -1,6 +1,7 @@
 #pragma once
 
 #include <agdg/types.hpp>
+#include <rapidjson/document.h>
 
 #include <string>
 
@@ -10,8 +11,9 @@ namespace agdg {
 		static unique_ptr<IContentManager> Create();
 		virtual ~IContentManager() {}
 
-		// FIXME: Get rid of this bull
-		virtual bool GetCachedAsset(const SHA3_224& hash, std::string& data_out) = 0;
-		virtual void CacheAsset(const SHA3_224& hash, const std::string& path, const std::string& content) = 0;
+		//virtual std::string get_asset_as_string(const std::string& path) = 0;
+		virtual SHA3_224 put(const rapidjson::Document& document, bool cache) = 0;
+
+		//virtual void rehash_all_content() = 0;
 	};
 }

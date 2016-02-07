@@ -297,7 +297,7 @@ namespace agdg {
 
 			if (ok) {
 				auto token = g_token_manager.assign_account_token(account_snapshot);
-				protocol.SendLoginSuccess(HashUtils::HashToHexString(token), server->GetRealms());
+				protocol.SendLoginSuccess(HashUtils::hash_to_hex_string(token), server->GetRealms());
 			}
 			else {
 				protocol.SendError("Invalid username or password");
