@@ -2,6 +2,7 @@
 
 #include <rapidjson/document.h>
 
+#include <ostream>
 #include <string>
 
 namespace agdg {
@@ -58,6 +59,24 @@ namespace agdg {
 
 			return it->value;
 		}
+	};
+
+	class RapidJsonOstream {
+	public:
+		typedef char Ch;
+
+		RapidJsonOstream(std::ostream& os) : os(os) {}
+
+		void Flush() {
+			os.flush();
+		}
+
+		void Put(char c) { 
+			os.put(c);
+		}
+
+	private:
+		std::ostream& os;
 	};
 
 	template <typename T>

@@ -1,6 +1,7 @@
 #include <management/managementconsole.hpp>
 
 #include <agdg/serverlifecycle.hpp>
+#include <login/loginserver.hpp>
 #include <utility/logging.hpp>
 #include <utility/rapidjsonconfigmanager.hpp>
 #include <utility/rapidjsonutils.hpp>
@@ -33,8 +34,30 @@ namespace agdg {
 			// FIXME: d["message"] asserts!
 			if (cmd == "close_server")
 				g_serverLifecycle->close_server(d["message"].GetString());
+			else if (cmd == "post_news") {
+				std::string title, contents;
+				auto login = get_login(d);
+
+				RapidJsonUtils::get_value(title, d, "title");
+				RapidJsonUtils::get_value(contents, d, "contents");
+
+				login->post_news(std::move(title), std::move(contents));
+			}
 			else if (cmd == "stop")
 				g_serverLifecycle->Stop();
+		}
+
+	private:
+		ILoginServer* get_login(const rapidjson::Document& d) {
+			std::string service_name;
+			RapidJsonUtils::get_value(service_name, d, "serviceName");
+
+			auto login = dynamic_cast<ILoginServer*>(g_serverLifecycle->find_service_by_name(service_name));
+
+			if (!login)
+				throw std::runtime_error("invalid ILoginServer " + service_name);
+
+			return login;
 		}
 	};
 
@@ -123,8 +146,14 @@ namespace agdg {
 			rapidjson::Document d;
 			d.Parse(msg->get_payload().c_str());
 
-			if (d.GetParseError() == rapidjson::kParseErrorNone)
-				con->OnMessage(d);
+			if (d.GetParseError() == rapidjson::kParseErrorNone) {
+				try {
+					con->OnMessage(d);
+				}
+				catch (const std::exception& ex) {
+					g_log->error("ManagementConsole OnMessage exception: %s", ex.what());
+				}
+			}
 		}
 
 		bool is_allowed_client_addr(const std::string& client_addr) {

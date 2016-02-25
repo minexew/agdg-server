@@ -1,5 +1,6 @@
 #include <db/db.hpp>
 
+#include <utility/atomicreplacement.hpp>
 #include <utility/hashutils.hpp>
 #include <utility/logging.hpp>
 #include <utility/rapidjsonutils.hpp>
@@ -8,6 +9,7 @@
 #include <rapidjson/filewritestream.h>
 #include <rapidjson/writer.h>
 
+#include <fstream>
 #include <sstream>
 
 // TODO: migrate off fopen
@@ -43,6 +45,21 @@ namespace agdg {
 
 			fclose(f);
 			return true;
+		}
+
+		virtual void get_news(std::vector<db::NewsEntry>& news_out) override {
+			std::lock_guard<std::mutex> lg(news_mutex);
+
+			news_out.resize(news.size());
+			std::copy(news.begin(), news.end(), news_out.begin());
+		}
+
+		virtual void post_news(std::string&& title_html, std::string&& contents_html) override {
+			std::lock_guard<std::mutex> lg(news_mutex);
+
+			news.emplace_back(std::chrono::system_clock::now(), std::move(title_html), std::move(contents_html));
+
+			save_news_unguarded();
 		}
 
 		virtual bool VerifyCredentials(const std::string& username, const std::string& password, const std::string& hostname,
@@ -96,7 +113,41 @@ namespace agdg {
 			return true;
 		}
 
+		void save_news_unguarded() {
+			// TODO: could be done asynchronously
+			AtomicReplacement replacement(dir + "_news.json");
+			std::ofstream file(replacement.c_str());
+
+			if (!file.is_open()) {
+				g_log->error("failed to open '%s' for writing", replacement.c_str());
+				// TODO: exception?
+				return;
+			}
+
+			RapidJsonOstream stream(file);
+			rapidjson::Writer<RapidJsonOstream> writer(stream);
+
+			writer.StartArray();
+
+			for (const auto& entry : news) {
+				writer.StartObject();
+				writer.String("title");
+				writer.String(entry.title_html.c_str(), entry.title_html.size());
+				writer.String("contents");
+				writer.String(entry.contents_html.c_str(), entry.contents_html.size());
+				writer.EndObject();
+			}
+
+			writer.EndArray();
+
+			file.close();
+			replacement.commit();
+		}
+
 		std::string dir;
+
+		std::vector<db::NewsEntry> news;
+		std::mutex news_mutex;
 	};
 
 	unique_ptr<IJsonLoginDB> IJsonLoginDB::Create(const std::string& dir) {

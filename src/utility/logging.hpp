@@ -7,6 +7,7 @@ namespace agdg {
 
 	class ILogger {
 	public:
+		virtual void error(const char* format, ...) = 0;
 		virtual void Log(const char* format, ...) = 0;
 		virtual void GetAllMessages(std::function<void(LogTimestamp, const std::string&)> callback) = 0;
 	};

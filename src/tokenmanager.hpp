@@ -2,6 +2,7 @@
 
 #include <agdg/types.hpp>
 
+#include <cstdlib>
 #include <unordered_map>
 
 namespace agdg {

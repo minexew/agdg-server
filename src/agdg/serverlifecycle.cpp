@@ -12,6 +12,7 @@
 #include <mutex>
 #include <string>
 #include <thread>
+#include <unordered_map>
 #include <vector>
 
 namespace agdg {
@@ -36,7 +37,7 @@ namespace agdg {
 				service->Init();
 				service->Start();
 
-				services.push_back(std::move(service));
+				services[name] = std::move(service);
 			});
 
 			g_log->Log("Server is running");
@@ -49,20 +50,31 @@ namespace agdg {
 				shouldStop = true;
 		}
 
-		virtual void close_server(const std::string& message) {
+		virtual void close_server(const std::string& message) override {
 			std::lock_guard<std::mutex> lg(services_mutex);
 			g_log->Log("Closing server with reason '%s'", message.c_str());
 
 			for (auto& s : services)
-				s->close_server(message);
+				s.second->close_server(message);
 		}
 
-		virtual void reopen_server() {
+		virtual IService* find_service_by_name(const std::string& name) override {
+			std::lock_guard<std::mutex> lg(services_mutex);
+
+			auto it = services.find(name);
+
+			if (it == services.end())
+				return nullptr;
+			else
+				return it->second.get();
+		}
+
+		virtual void reopen_server() override {
 			std::lock_guard<std::mutex> lg(services_mutex);
 			g_log->Log("Reopening server");
 
 			for (auto& s : services)
-				s->reopen_server();
+				s.second->reopen_server();
 		}
 
 	private:
@@ -74,7 +86,7 @@ namespace agdg {
 			g_log->Log("Stopping services");
 
 			for (auto& s : services)
-				s->Stop();
+				s.second->Stop();
 
 			isStarted = false;
 		}
@@ -94,7 +106,7 @@ namespace agdg {
 				throw std::runtime_error((std::string) "unknown service class " + class_.c_str());
 		}
 
-		std::vector<std::unique_ptr<IService>> services;
+		std::unordered_map<std::string, std::unique_ptr<IService>> services;
 		std::mutex services_mutex;
 
 		bool isStarted = false;

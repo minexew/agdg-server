@@ -185,10 +185,6 @@ namespace agdg {
 			server_closure_message = message;
 		}
 
-		virtual void reopen_server() override {
-			server_closed = false;
-		}
-
 		const std::vector<Realm>& GetRealms() const { return realms;  }
 		const std::string& GetServerName() const { return serverName; }
 
@@ -214,6 +210,14 @@ namespace agdg {
 			}
 			else
 				return db->VerifyCredentials(username, password, con->get_host(), snapshot_out);
+		}
+
+		virtual void post_news(std::string&& title_html, std::string&& contents_html) override {
+			db->post_news(std::move(title_html), std::move(contents_html));
+		}
+
+		virtual void reopen_server() override {
+			server_closed = false;
 		}
 
 	private:
