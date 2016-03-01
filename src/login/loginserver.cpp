@@ -85,7 +85,7 @@ namespace agdg {
 			con->send(s.GetString());
 		}
 
-		void SendHello(const std::string& serverName) {
+		void send_hello(const std::string& serverName, const std::vector<db::NewsEntry>& news) {
 			rapidjson::StringBuffer s;
 			rapidjson::Writer<rapidjson::StringBuffer> writer(s);
 
@@ -94,6 +94,20 @@ namespace agdg {
 			writer.String("hello");
 			writer.String("serverName");
 			writer.String(serverName.c_str(), serverName.size());
+			writer.String("news");
+			writer.StartArray();
+
+			for (const auto& entry : news) {
+				writer.StartObject();
+				writer.String("title");
+				writer.String(entry.title_html.c_str(), entry.title_html.size());
+				writer.String("contents");
+				writer.String(entry.contents_html.c_str(), entry.contents_html.size());
+				writer.EndObject();
+			}
+
+			writer.EndArray();
+
 			writer.EndObject();
 
 			con->send(s.GetString());
@@ -135,7 +149,7 @@ namespace agdg {
 	public:
 		LoginSession(LoginServer* server, connection_ptr con) : server(server), con(con), protocol(con) {}
 
-		void OnMessage(const rapidjson::Document& d);
+		void on_message(const rapidjson::Document& d);
 
 	private:
 		LoginServer* server;
@@ -185,6 +199,10 @@ namespace agdg {
 			server_closure_message = message;
 		}
 
+		void get_news(std::vector<db::NewsEntry>& news) {
+			db->get_news(news);
+		}
+
 		const std::vector<Realm>& GetRealms() const { return realms;  }
 		const std::string& GetServerName() const { return serverName; }
 
@@ -225,8 +243,14 @@ namespace agdg {
 			rapidjson::Document d;
 			d.Parse(msg->get_payload().c_str());
 
-			if (d.GetParseError() == rapidjson::kParseErrorNone)
-				session->OnMessage(d);
+			if (d.GetParseError() == rapidjson::kParseErrorNone) {
+				try {
+					session->on_message(d);
+				}
+				catch (const std::exception& ex) {
+					g_log->error("LoginServer on_message exception: %s", ex.what());
+				}
+			}
 		}
 
 		void OnOpen(connection_hdl hdl) {
@@ -263,7 +287,7 @@ namespace agdg {
 		REFL_END
 	};
 
-	void LoginSession::OnMessage(const rapidjson::Document& d) {
+	void LoginSession::on_message(const rapidjson::Document& d) {
 		if (!clientVersion) {
 			int clientVersion;
 
@@ -276,7 +300,10 @@ namespace agdg {
 				if (server->is_server_closed(closure_message))
 					protocol.send_server_closed(closure_message);
 				else {
-					protocol.SendHello(server->GetServerName());
+					std::vector<db::NewsEntry> news;
+					server->get_news(news);
+
+					protocol.send_hello(server->GetServerName(), news);
 					this->clientVersion = clientVersion;
 				}
 			}

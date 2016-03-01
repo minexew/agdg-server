@@ -2,19 +2,11 @@
 
 #include <tinydir.h>
 
-#include <fstream>
 #include <functional>
 
 namespace agdg {
 	class ContentScanner {
 	public:
-		// TODO: move this?
-		static std::string GetFileContents(const std::string& path) {
-			std::ifstream ifs(path);
-			// FIXME: what if open fails?
-			return std::string(std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>());
-		}
-
 		static void ScanDirectory(const std::string& path, std::function<void(const std::string& path, const char* filename)> callback,
 				const std::string& requiredSuffix = "", bool recursive = true) {
 			tinydir_dir dir;

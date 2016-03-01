@@ -19,16 +19,11 @@ namespace agdg {
 	class ServerLifecycle : public IServerLifecycle {
 	public:
 		virtual void Run() override {
-			while (isStarted && !shouldStop)
+			while (!shouldStop)
 				std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-			DoStop();
 		}
 
 		virtual void Start() override {
-			if (isStarted)
-				return;
-
 			// FIXME: error handling
 			g_log->Log("Starting Services");
 
@@ -41,13 +36,6 @@ namespace agdg {
 			});
 
 			g_log->Log("Server is running");
-
-			isStarted = true;
-		}
-
-		virtual void Stop() override {
-			if (isStarted)
-				shouldStop = true;
 		}
 
 		virtual void close_server(const std::string& message) override {
@@ -77,20 +65,19 @@ namespace agdg {
 				s.second->reopen_server();
 		}
 
-	private:
-		void DoStop() {
-			if (!isStarted)
-				return;
+		virtual void request_shutdown() override {
+			shouldStop = true;
+		}
 
+		virtual void stop() override {
 			std::lock_guard<std::mutex> lg(services_mutex);
 			g_log->Log("Stopping services");
 
 			for (auto& s : services)
 				s.second->Stop();
-
-			isStarted = false;
 		}
 
+	private:
 		unique_ptr<IService> InstantiateService(const std::string& name, const rapidjson::Value& d) {
 			std::string class_(d["class"].GetString());
 
@@ -109,7 +96,6 @@ namespace agdg {
 		std::unordered_map<std::string, std::unique_ptr<IService>> services;
 		std::mutex services_mutex;
 
-		bool isStarted = false;
 		bool shouldStop = false;
 	};
 

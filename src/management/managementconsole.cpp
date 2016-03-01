@@ -44,7 +44,7 @@ namespace agdg {
 				login->post_news(std::move(title), std::move(contents));
 			}
 			else if (cmd == "stop")
-				g_serverLifecycle->Stop();
+				g_serverLifecycle->request_shutdown();
 		}
 
 	private:

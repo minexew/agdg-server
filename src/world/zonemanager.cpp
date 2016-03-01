@@ -6,7 +6,6 @@
 #include <utility/rapidjsonutils.hpp>
 
 #include <rapidjson/document.h>
-#include <rapidjson/error/en.h>
 
 #include <memory>
 #include <unordered_map>
@@ -15,13 +14,8 @@ namespace agdg {
 	class Zone : public IZone {
 	public:
 		Zone(IContentManager* content_mgr, const std::string& path) {
-			std::string json = ContentScanner::GetFileContents(path); //content_mgr->get_asset_as_string(path);
-
 			rapidjson::Document d;
-			rapidjson::ParseResult ok = d.Parse(json.c_str());
-
-			if (!ok)
-				throw std::runtime_error(path + ": JSON parse error: " + rapidjson::GetParseError_En(ok.Code()) + " (" + std::to_string(ok.Offset()) + ")");
+			RapidJsonUtils::load_json(d, path.c_str());
 
 			try {
 				RapidJsonUtils::get_value(name, d, "name");

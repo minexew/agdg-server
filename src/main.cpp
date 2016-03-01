@@ -1,5 +1,6 @@
 #include <agdg/config.hpp>
 #include <agdg/serverlifecycle.hpp>
+#include <utility/logging.hpp>
 #include <tokenmanager.hpp>
 
 #include <reflection/base.hpp>
@@ -7,6 +8,11 @@
 #include <websocketpp/error.hpp>
 
 #include <iostream>
+
+#ifndef _WIN32
+#include <signal.h>
+#include <unistd.h>
+#endif
 
 namespace reflection {
 	class DefaultErrorHandler : public IErrorHandler {
@@ -23,6 +29,22 @@ namespace reflection {
 namespace agdg {
 	TokenManager g_token_manager;
 
+	static void ctrl_c_handler(int signal) {
+		g_serverLifecycle->request_shutdown();
+	}
+
+	static void init_ctrl_c_handler() {
+#ifndef _WIN32
+		struct sigaction sigIntHandler;
+
+		sigIntHandler.sa_handler = ctrl_c_handler;
+		sigemptyset(&sigIntHandler.sa_mask);
+		sigIntHandler.sa_flags = 0;
+
+		sigaction(SIGINT, &sigIntHandler, NULL);
+#endif
+	}
+
 	int main(int argc, char** argv) {
 		try {
 			const char* config_name = nullptr;
@@ -32,6 +54,8 @@ namespace agdg {
 
 			g_config->init(config_name);
 
+			init_ctrl_c_handler();
+
 			g_serverLifecycle->Start();
 			g_serverLifecycle->Run();
 		}
@@ -39,11 +63,13 @@ namespace agdg {
 			std::cout << e.what() << std::endl;
 		}
 		catch (const std::exception& ex) {
-			std::cerr << ex.what() << std::endl;
+			g_log->error("exception: %s", ex.what());
 		}
 		catch (...) {
 			std::cout << "other exception" << std::endl;
 		}
+
+		g_serverLifecycle->stop();
 
 		//std::cerr << "Press any key to close." << std::endl;
 		//std::cin.get();

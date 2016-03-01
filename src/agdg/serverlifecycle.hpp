@@ -9,7 +9,9 @@ namespace agdg {
 	public:
 		virtual void Run() = 0;
 		virtual void Start() = 0;
-		virtual void Stop() = 0;
+
+		virtual void request_shutdown() = 0;
+		virtual void stop() = 0;
 
 		virtual void close_server(const std::string& message) = 0;
 		virtual void reopen_server() = 0;

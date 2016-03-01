@@ -17,7 +17,9 @@
 namespace agdg {
 	class JsonLoginDB : public IJsonLoginDB {
 	public:
-		JsonLoginDB(const std::string& dir) : dir(dir) {}
+		JsonLoginDB(const std::string& dir) : dir(dir), news_filename(dir + "_news.json") {
+			load_news_unguarded();
+		}
 
 		virtual bool CreateAccount(const std::string& username, const std::string& password) override {
 			// FIXME: error reporting
@@ -113,9 +115,32 @@ namespace agdg {
 			return true;
 		}
 
+		void load_news_unguarded() {
+			rapidjson::Document d;
+			if (!RapidJsonUtils::try_load_json(d, news_filename.c_str()))
+				return;
+
+			auto& array = d;
+
+			if (!array.IsArray())
+				throw std::runtime_error("expected array in '" + news_filename + "'");
+
+			try {
+				for (auto it = array.Begin(); it != array.End(); it++) {
+					// FIXME: check *it.IsObject()
+					news.emplace_back();
+					RapidJsonUtils::get_value(news.back().title_html, *it, "title");
+					RapidJsonUtils::get_value(news.back().contents_html, *it, "contents");
+				}
+			}
+			catch (std::runtime_error& ex) {
+				throw std::runtime_error(ex.what() + " in '"s + news_filename + "'");
+			}
+		}
+
 		void save_news_unguarded() {
 			// TODO: could be done asynchronously
-			AtomicReplacement replacement(dir + "_news.json");
+			AtomicReplacement replacement(news_filename);
 			std::ofstream file(replacement.c_str());
 
 			if (!file.is_open()) {
@@ -145,6 +170,7 @@ namespace agdg {
 		}
 
 		std::string dir;
+		std::string news_filename = dir + "_news.json";
 
 		std::vector<db::NewsEntry> news;
 		std::mutex news_mutex;

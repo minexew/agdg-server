@@ -1,6 +1,9 @@
 #pragma once
 
+#include <utility/fileutils.hpp>
+
 #include <rapidjson/document.h>
+#include <rapidjson/error/en.h>
 
 #include <ostream>
 #include <string>
@@ -47,6 +50,28 @@ namespace agdg {
 				throw std::runtime_error("expected string");
 
 			output.assign(value.GetString(), value.GetStringLength());
+		}
+
+		static void load_json(rapidjson::Document& d_out, const char* path) {
+			std::string json = FileUtils::get_contents(path);
+			rapidjson::ParseResult ok = d_out.Parse(json.c_str());
+
+			if (!ok)
+				throw std::runtime_error(path + ": JSON parse error: "s + rapidjson::GetParseError_En(ok.Code()) + " (" + std::to_string(ok.Offset()) + ")");
+		}
+
+		static bool try_load_json(rapidjson::Document& d_out, const char* path) {
+			std::string json;
+
+			if (!FileUtils::try_get_contents(path, json))
+				return false;
+
+			rapidjson::ParseResult ok = d_out.Parse(json.c_str());
+
+			if (!ok)
+				throw std::runtime_error(path + ": JSON parse error: "s + rapidjson::GetParseError_En(ok.Code()) + " (" + std::to_string(ok.Offset()) + ")");
+
+			return true;
 		}
 
 	private:
