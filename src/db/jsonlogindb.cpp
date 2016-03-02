@@ -98,21 +98,10 @@ namespace agdg {
 	private:
 		bool LoadAccount(const std::string& username, rapidjson::Document& d) {
 			const auto filename = dir + username + ".json";
-			FILE* f = fopen(filename.c_str(), "rb");		// FIXME: get rid of fopen
 
-			if (!f)
+			if (!RapidJsonUtils::try_load_json(d, filename.c_str()))
 				return false;
 
-			char buffer[4096];
-			rapidjson::FileReadStream stream(f, buffer, sizeof(buffer));
-			d.ParseStream(stream);
-
-			if (d.GetParseError() != rapidjson::kParseErrorNone) {
-				//throw std::runtime_error((std::string) "syntax error in config file " + fileName);
-				g_log->Log("error in JSON file '%s'", filename.c_str());
-			}
-
-			fclose(f);
 			return true;
 		}
 
