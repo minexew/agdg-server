@@ -10,6 +10,7 @@
 #include <rapidjson/writer.h>
 
 #include <fstream>
+#include <mutex>
 #include <sstream>
 
 // TODO: migrate off fopen
