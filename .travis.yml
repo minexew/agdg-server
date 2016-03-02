@@ -1,8 +1,9 @@
 language: cpp
-addons: &gcc5
+addons:
   apt:
     sources:
       - george-edison55-precise-backports # cmake 3.2.3 / doxygen 1.8.3
+      - ubuntu-toolchain-r-test # gcc-5
     packages:
       - cmake
       - cmake-data
