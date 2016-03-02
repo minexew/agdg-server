@@ -10,6 +10,7 @@ addons:
       - g++-5
 before_install:
 - if [ $TRAVIS_OS_NAME == osx ]; then brew update && brew upgrade cmake; fi
+- if [ "$CXX" == "clang++" ]; then export CXXFLAGS="-stdlib=libc++"; fi
 script: cmake . && make
 compiler:
   - clang
