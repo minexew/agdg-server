@@ -6,6 +6,8 @@ addons:
     packages:
       - cmake
       - cmake-data
+before_install:
+- if [ $TRAVIS_OS_NAME == osx ]; then brew update && brew install cmake ; fi
 script: cmake . && make
 compiler:
   - clang
