@@ -4,6 +4,7 @@
 #include <utility/rapidjsonutils.hpp>
 
 #include <fstream>
+#include <stdexcept>
 
 // TODO: migrate off fopen
 

@@ -6,10 +6,11 @@
 #include <rapidjson/error/en.h>
 
 #include <ostream>
+#include <stdexcept>
 #include <string>
 
 namespace agdg {
-	using namespace std::literals::string_literals;
+	using namespace std::string_literals;
 
 	class RapidJsonUtils {
 	public:
