@@ -5,10 +5,10 @@ namespace agdg {
 	public:
 		EntityImpl(PlayerCharacter* pc) : pc(pc), pos{0, 0, 0.5f}, dir{}, velocity{} {}
 
-		virtual const std::string& get_name() { return pc->get_name(); }
+		virtual const std::string& get_name() override { return pc->get_name(); }
 
-		virtual const glm::vec3& get_dir() { return dir; }
-		virtual const glm::vec3& get_pos() { return pos; }
+		virtual const glm::vec3& get_dir() override { return dir; }
+		virtual const glm::vec3& get_pos() override { return pos; }
 
 		virtual void set_pos_dir(const glm::vec3& pos, const glm::vec3& dir) override {
 			this->pos = pos;

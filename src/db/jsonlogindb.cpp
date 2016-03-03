@@ -1,6 +1,7 @@
 #include <db/db.hpp>
 
 #include <utility/atomicreplacement.hpp>
+#include <utility/chronoutils.hpp>
 #include <utility/hashutils.hpp>
 #include <utility/logging.hpp>
 #include <utility/rapidjsonutils.hpp>
@@ -54,7 +55,7 @@ namespace agdg {
 			std::lock_guard<std::mutex> lg(news_mutex);
 
 			news_out.resize(news.size());
-			std::copy(news.begin(), news.end(), news_out.begin());
+			std::reverse_copy(news.begin(), news.end(), news_out.begin());
 		}
 
 		virtual void post_news(std::string&& title_html, std::string&& contents_html) override {
@@ -119,6 +120,7 @@ namespace agdg {
 				for (auto it = array.Begin(); it != array.End(); it++) {
 					// FIXME: check *it.IsObject()
 					news.emplace_back();
+					RapidJsonUtils::get_value(news.back().when_posted, *it, "when_posted");
 					RapidJsonUtils::get_value(news.back().title_html, *it, "title");
 					RapidJsonUtils::get_value(news.back().contents_html, *it, "contents");
 				}
@@ -146,6 +148,8 @@ namespace agdg {
 
 			for (const auto& entry : news) {
 				writer.StartObject();
+				writer.String("when_posted");
+				writer.String(ChronoUtils::to_iso8601(entry.when_posted).c_str());
 				writer.String("title");
 				writer.String(entry.title_html.c_str(), entry.title_html.size());
 				writer.String("contents");

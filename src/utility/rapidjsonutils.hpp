@@ -1,5 +1,6 @@
 #pragma once
 
+#include <utility/chronoutils.hpp>
 #include <utility/fileutils.hpp>
 
 #include <rapidjson/document.h>
@@ -51,6 +52,13 @@ namespace agdg {
 				throw std::runtime_error("expected string");
 
 			output.assign(value.GetString(), value.GetStringLength());
+		}
+
+		static void get_value(std::chrono::system_clock::time_point& output, const rapidjson::Value& value) {
+			if (!value.IsString())
+				throw std::runtime_error("expected string");
+
+			ChronoUtils::from_iso8601(output, std::string(value.GetString(), value.GetStringLength()));
 		}
 
 		static void load_json(rapidjson::Document& d_out, const char* path) {

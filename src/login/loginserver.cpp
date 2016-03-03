@@ -3,6 +3,7 @@
 #include <agdg/config.hpp>
 #include <db/db.hpp>
 #include <tokenmanager.hpp>
+#include <utility/chronoutils.hpp>
 #include <utility/hashutils.hpp>
 #include <utility/logging.hpp>
 #include <utility/rapidjsonconfigmanager.hpp>
@@ -99,6 +100,8 @@ namespace agdg {
 
 			for (const auto& entry : news) {
 				writer.StartObject();
+				writer.String("when_posted");
+				writer.String(ChronoUtils::to_date_string(entry.when_posted).c_str());
 				writer.String("title");
 				writer.String(entry.title_html.c_str(), entry.title_html.size());
 				writer.String("contents");

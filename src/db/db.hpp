@@ -46,6 +46,7 @@ namespace agdg {
 			const std::string& hostname, AccountSnapshot& snapshot_out) = 0;
 
 		// TODO: this might be needlessly inefficient (not that it matters a lot)
+		// returns newest first
 		virtual void get_news(std::vector<db::NewsEntry>& news_out) = 0;
 		virtual void post_news(std::string&& title_html, std::string&& contents_html) = 0;
 	};

@@ -66,7 +66,7 @@ namespace agdg {
 			return n;
 		}
 
-		virtual int_type overflow(int_type c) {
+		virtual int_type overflow(int_type c) override {
 			size_t pos = bytes.size();
 			bytes.resize(pos + 1);
 			bytes[pos] = c;
