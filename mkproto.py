@@ -1,10 +1,12 @@
+#!/usr/bin/env python3
+
 class Message:
 	def __init__(self, id, data=[]):
 		self.id = id
 		self.data = data
 
 class Field:
-	def __init__(self, name, repeated, cpp_type=None, cpp_decode_func='Read', cpp_encode_func='Write',
+	def __init__(self, name, repeated, cpp_type=None, cpp_decode_func='read', cpp_encode_func='write',
 				ts_decode_func=None, ts_encode_func=None, ts_type=None):
 		self.name = name
 		self.repeated = repeated
@@ -25,7 +27,7 @@ class Field:
 	def write_cpp_read(self, out, rename=None):
 		if self.repeated:
 			print('    uint32_t %s_count;' % self.name, file=out)
-			print('    if (!Read(buffer, length, %s_count)) return false;' % self.name, file=out)
+			print('    if (!read(buffer, length, %s_count)) return false;' % self.name, file=out)
 			print(file=out)
 			print('    for (size_t i = 0; i < %s_count; i++) {' % self.name, file=out)
 			print('        %s.emplace_back();' % self.name, file=out)
@@ -37,7 +39,7 @@ class Field:
 
 	def write_cpp_write(self, out, rename=None):
 		if self.repeated:
-			print('    if (!Write<uint32_t>(out, %s.size())) return false;' % self.name, file=out)
+			print('    if (!write<uint32_t>(out, %s.size())) return false;' % self.name, file=out)
 			print(file=out)
 			print('    for (size_t i = 0; i < %s.size(); i++) {' % self.name, file=out)
 			self.write_cpp_encode(out, rename='%s[i]' % self.name)
@@ -319,13 +321,14 @@ sorted_messages = sorted(messages.items(), key=lambda tuple: tuple[1].id + (1000
 
 def generate_cpp_header():
 	with open('src/realm/protocol_generated.hpp', 'wt') as out:
-		for name, msg in sorted_messages:
-			print('enum { k%s = %d };' % (name, msg.id), file=out)
+		#for name, msg in sorted_messages:
+		#	print('enum { k%s = %d };' % (name, msg.id), file=out)
 
 		print(file=out)
 
 		for name, msg in sorted_messages:
 			print('struct %s {' % name, file=out)
+			print('    enum { code = %d };' % msg.id, file=out)
 
 			for field in msg.data:
 				if callable(getattr(field, 'write_cpp_typedecl', None)): field.write_cpp_typedecl(out)
@@ -334,15 +337,15 @@ def generate_cpp_header():
 				field.write_cpp_decl(out)
 
 			if len(msg.data): print(file=out)
-			print('    bool Decode(const uint8_t* buffer, size_t length);', file=out)
-			print('    bool Encode(std::ostream& out) const;', file=out)
+			print('    bool decode(const uint8_t* buffer, size_t length);', file=out)
+			print('    bool encode(std::vector<uint8_t>& out, uint8_t cookie) const;', file=out)
 
 			print('};', file=out)
 
 def generate_cpp_source():
 	with open('src/realm/protocol_generated_impl.hpp', 'wt') as out:
 		for name, msg in sorted_messages:
-			print('bool %s::Decode(const uint8_t* buffer, size_t length) {' % name, file=out)
+			print('bool %s::decode(const uint8_t* buffer, size_t length) {' % name, file=out)
 
 			for field in msg.data:
 				field.write_cpp_read(out)
@@ -350,26 +353,26 @@ def generate_cpp_source():
 			print('    return true;', file=out)
 			print('}', file=out)
 			print(file=out)
-			print('bool %s::Encode(std::ostream& out) const {' % name, file=out)
-			print('    Begin(out, k%s);' % name, file=out)
+			print('bool %s::encode(std::vector<uint8_t>& out, uint8_t cookie) const {' % name, file=out)
+			print('    auto offset = begin(out, %s::code, cookie);' % name, file=out)
+			print('    if (!offset) return false;', file=out)
 
 			for field in msg.data:
 				field.write_cpp_write(out)
 
-			print('    return true;', file=out)
+			print('    return end(out, offset);', file=out)
 			print('}', file=out)
 			print(file=out)
 
 def generate_ts_source():
-	with open('../agdg-client/src/agdg-client/realm-protocol-generated.ts', 'wt') as out:
+	with open('../agdg-client/src/agdg-client/realmprotocol-generated.ts', 'wt') as out:
 		print('/// <reference path="realmprotocol.ts"/>', file=out)
 		print(file=out)
 		print('module RealmProtocol {', file=out)
 		print('export class RealmProtocol extends RealmProtocolBase {', file=out)
 
 		for name, msg in sorted_messages:
-			print('decode%s(dv: DataView) {' % name, file=out)
-			print('    var offset = 1;', file=out)
+			print('decode%s(dv: DataView, offset: number) {' % name, file=out)
 			print('    var data: any = {};', file=out)
 
 			for field in msg.data:
@@ -378,14 +381,16 @@ def generate_ts_source():
 			print('    return data;', file=out)
 			print('}', file=out)
 			print(file=out)
-			arguments = ', '.join(['%s: %s' % (field.name, field.ts_type) for field in msg.data])
+			arguments = ', '.join(['%s: %s' % (field.name, field.ts_type) for field in msg.data] + ['cookie: number'])
 			print('send%s(%s) {' % (name, arguments), file=out)
-			print('    var offset = 1;', file=out)
 			print('    this.dv.setUint8(0, %d);' % msg.id, file=out)
+			print('    this.dv.setUint8(1, cookie);', file=out)
+			print('    var offset = 4;', file=out)
 
 			for field in msg.data:
 				field.write_ts_write(out)
 
+			print('    this.dv.setUint16(2, offset - 4, true);', file=out)
 			print('    this.ws.send(this.ab.slice(0, offset));', file=out)
 			print('};', file=out)
 			print(file=out)

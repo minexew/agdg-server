@@ -8,7 +8,7 @@
 namespace agdg {
 	class IContentManager {
 	public:
-		static unique_ptr<IContentManager> Create();
+		static unique_ptr<IContentManager> create();
 		virtual ~IContentManager() {}
 
 		//virtual std::string get_asset_as_string(const std::string& path) = 0;

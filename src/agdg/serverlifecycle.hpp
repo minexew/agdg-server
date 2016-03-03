@@ -7,8 +7,8 @@ namespace agdg {
 
 	class IServerLifecycle {
 	public:
-		virtual void Run() = 0;
-		virtual void Start() = 0;
+		virtual void run() = 0;
+		virtual void start() = 0;
 
 		virtual void request_shutdown() = 0;
 		virtual void stop() = 0;

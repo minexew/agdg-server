@@ -3,7 +3,7 @@
 #include <utility/atomicreplacement.hpp>
 #include <utility/chronoutils.hpp>
 #include <utility/hashutils.hpp>
-#include <utility/logging.hpp>
+#include <agdg/logging.hpp>
 #include <utility/rapidjsonutils.hpp>
 
 #include <rapidjson/filereadstream.h>
@@ -170,7 +170,7 @@ namespace agdg {
 		std::mutex news_mutex;
 	};
 
-	unique_ptr<IJsonLoginDB> IJsonLoginDB::Create(const std::string& dir) {
+	unique_ptr<IJsonLoginDB> IJsonLoginDB::create(const std::string& dir) {
 		return make_unique<JsonLoginDB>(dir);
 	}
 }

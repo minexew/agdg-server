@@ -2,7 +2,7 @@
 
 #include <agdg/config.hpp>
 #include <utility/hashutils.hpp>
-#include <utility/logging.hpp>
+#include <agdg/logging.hpp>
 
 #include <rapidjson/writer.h>
 
@@ -75,7 +75,7 @@ namespace agdg {
 		std::string content_output_dir;
 	};
 
-	unique_ptr<IContentManager> IContentManager::Create() {
+	unique_ptr<IContentManager> IContentManager::create() {
 		return make_unique<ContentManager>();
 	}
 }

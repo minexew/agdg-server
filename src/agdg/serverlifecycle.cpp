@@ -2,7 +2,7 @@
 
 #include <agdg/config.hpp>
 #include <agdg/service.hpp>
-#include <utility/logging.hpp>
+#include <agdg/logging.hpp>
 
 // All Services: shouldn't really be here, low-priority fix
 #include <login/loginserver.hpp>
@@ -18,19 +18,19 @@
 namespace agdg {
 	class ServerLifecycle : public IServerLifecycle {
 	public:
-		virtual void Run() override {
+		virtual void run() override {
 			while (!shouldStop)
 				std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		}
 
-		virtual void Start() override {
+		virtual void start() override {
 			// FIXME: error handling
-			g_log->Log("Starting Services");
+			g_log->Log("Starting services");
 
 			g_config->enumerate_services([this](const auto& name, const auto& d) {
-				auto service = InstantiateService(name, d);
-				service->Init();
-				service->Start();
+				auto service = instantiate_service(name, d);
+				service->init();
+				service->start();
 
 				services[name] = std::move(service);
 			});
@@ -74,21 +74,21 @@ namespace agdg {
 			g_log->Log("Stopping services");
 
 			for (auto& s : services)
-				s.second->Stop();
+				s.second->stop();
 		}
 
 	private:
-		unique_ptr<IService> InstantiateService(const std::string& name, const rapidjson::Value& d) {
+		unique_ptr<IService> instantiate_service(const std::string& name, const rapidjson::Value& d) {
 			std::string class_(d["class"].GetString());
 
 			g_log->Log("Starting service '%s' of class %s", name.c_str(), class_.c_str());
 
 			if (class_ == "ILoginServer")
-				return ILoginServer::Create(name, d);
+				return ILoginServer::create(name, d);
 			else if (class_ == "IManagementConsole")
-				return IManagementConsole::Create(name, d);
+				return IManagementConsole::create(name, d);
 			else if (class_ == "IRealmServer")
-				return IRealmServer::Create(name, d);
+				return IRealmServer::create(name, d);
 			else
 				throw std::runtime_error((std::string) "unknown service class " + class_.c_str());
 		}

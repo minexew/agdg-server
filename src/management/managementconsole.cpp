@@ -2,7 +2,7 @@
 
 #include <agdg/serverlifecycle.hpp>
 #include <login/loginserver.hpp>
-#include <utility/logging.hpp>
+#include <agdg/logging.hpp>
 #include <utility/rapidjsonconfigmanager.hpp>
 #include <utility/rapidjsonutils.hpp>
 
@@ -23,7 +23,7 @@ namespace agdg {
 
 	class ManagementConsoleSession {
 	public:
-		void OnMessage(const rapidjson::Document& d) {
+		void on_message(const rapidjson::Document& d) {
 			const auto& command = d["command"];
 
 			if (!command.IsString())
@@ -116,24 +116,24 @@ namespace agdg {
 			}
 		}
 
-		virtual void Init() override {
+		virtual void init() override {
 			server.init_asio();
 			server.set_reuse_addr(true);
 
 			server.clear_access_channels(websocketpp::log::alevel::all);
 
-			server.set_open_handler(bind(&ManagementConsole::OnOpen, this, _1));
-			server.set_validate_handler(bind(&ManagementConsole::ValidateHandler, this, _1));
+			server.set_open_handler(bind(&ManagementConsole::on_open, this, _1));
+			server.set_validate_handler(bind(&ManagementConsole::validate_handler, this, _1));
 
 			server.listen(listenPort);
 			server.start_accept();
 		}
 
-		virtual void Start() override {
-			thread = std::thread(&ManagementConsole::Run, this);
+		virtual void start() override {
+			thread = std::thread(&ManagementConsole::run, this);
 		}
 
-		virtual void Stop() override {
+		virtual void stop() override {
 			// FIXME: end all connections
 
 			server.stop();
@@ -142,13 +142,13 @@ namespace agdg {
 		}
 
 	private:
-		static void ForwardMessage(ManagementConsoleSession* con, connection_hdl hdl, Server::message_ptr msg) {
+		static void forward_message(ManagementConsoleSession* con, connection_hdl hdl, Server::message_ptr msg) {
 			rapidjson::Document d;
 			d.Parse(msg->get_payload().c_str());
 
 			if (d.GetParseError() == rapidjson::kParseErrorNone) {
 				try {
-					con->OnMessage(d);
+					con->on_message(d);
 				}
 				catch (const std::exception& ex) {
 					g_log->error("ManagementConsole OnMessage exception: %s", ex.what());
@@ -164,11 +164,11 @@ namespace agdg {
 			return false;
 		}
 
-		void OnOpen(connection_hdl hdl) {
+		void on_open(connection_hdl hdl) {
 			connection_ptr con = server.get_con_from_hdl(hdl);
-			con->set_message_handler(bind(&ManagementConsole::ForwardMessage, con.get(), _1, _2));
+			con->set_message_handler(bind(&ManagementConsole::forward_message, con.get(), _1, _2));
 
-			g_log->GetAllMessages([con](auto timestamp, auto message) {
+			g_log->get_all_messages([con](auto timestamp, auto message) {
 				// Walk the log and send all previous entries to the client
 				rapidjson::StringBuffer s;
 
@@ -177,11 +177,11 @@ namespace agdg {
 			});
 		}
 
-		void Run() {
+		void run() {
 			server.run();
 		}
 
-		bool ValidateHandler(connection_hdl hdl) {
+		bool validate_handler(connection_hdl hdl) {
 			connection_ptr con = server.get_con_from_hdl(hdl);
 
 			auto& socket = con->get_raw_socket();
@@ -208,7 +208,7 @@ namespace agdg {
 		REFL_END
 	};
 
-	unique_ptr<IManagementConsole> IManagementConsole::Create(const std::string& serviceName, const rapidjson::Value& config) {
+	unique_ptr<IManagementConsole> IManagementConsole::create(const std::string& serviceName, const rapidjson::Value& config) {
 		return make_unique<ManagementConsole>(config);
 	}
 }

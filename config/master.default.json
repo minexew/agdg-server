@@ -6,12 +6,12 @@
       "allowedIPs": ["127.0.0.1", "::1"]
     },
     "login": {
-      "class":      "ILoginServer",
-      "db":         "IJsonLoginDB",
-      "listenPort": "9002",
-      "forceAnonymousLogin": "false",
-      "serverName": "AGDG MMO Official",
-      "realms":     [{"name": "AGDG MMO Test Realm", "url": "ws://localhost:9003"}]
+      "class":          "ILoginServer",
+      "db":             "IJsonLoginDB",
+      "listenPort":     "9002",
+      "anonymousLogin": "false",
+      "serverName":     "AGDG MMO Development",
+      "realms":         [{"name": "AGDG MMO Test Realm", "url": "ws://localhost:9003"}]
     },
     "test_realm": {
       "class":      "IRealmServer",

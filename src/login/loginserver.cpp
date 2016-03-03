@@ -5,7 +5,7 @@
 #include <tokenmanager.hpp>
 #include <utility/chronoutils.hpp>
 #include <utility/hashutils.hpp>
-#include <utility/logging.hpp>
+#include <agdg/logging.hpp>
 #include <utility/rapidjsonconfigmanager.hpp>
 #include <utility/rapidjsonutils.hpp>
 #include <websocketpp_configuration.hpp>
@@ -45,7 +45,7 @@ namespace agdg {
 	public:
 		LoginProtocol(connection_ptr con) : con(con) {}
 
-		void SendError(const std::string& error) {
+		void send_error(const std::string& error) {
 			rapidjson::StringBuffer s;
 			rapidjson::Writer<rapidjson::StringBuffer> writer(s);
 
@@ -59,7 +59,7 @@ namespace agdg {
 			con->send(s.GetString());
 		}
 
-		void SendLoginSuccess(const std::string& token, const std::vector<Realm>& realms) {
+		void send_login_success(const std::string& token, const std::vector<Realm>& realms) {
 			rapidjson::StringBuffer s;
 			rapidjson::Writer<rapidjson::StringBuffer> writer(s);
 
@@ -86,7 +86,8 @@ namespace agdg {
 			con->send(s.GetString());
 		}
 
-		void send_hello(const std::string& serverName, const std::vector<db::NewsEntry>& news) {
+		void send_hello(const std::string& serverName, bool anonymousLogin,
+				const std::vector<db::NewsEntry>& news) {
 			rapidjson::StringBuffer s;
 			rapidjson::Writer<rapidjson::StringBuffer> writer(s);
 
@@ -95,6 +96,8 @@ namespace agdg {
 			writer.String("hello");
 			writer.String("serverName");
 			writer.String(serverName.c_str(), serverName.size());
+			writer.String("anonymousLogin");
+			writer.Bool(anonymousLogin);
 			writer.String("news");
 			writer.StartArray();
 
@@ -116,15 +119,15 @@ namespace agdg {
 			con->send(s.GetString());
 		}
 
-		void SendReject(int expectedVersion) {
+		void send_reject(int expectedVersion) {
 			rapidjson::StringBuffer s;
 			rapidjson::Writer<rapidjson::StringBuffer> writer(s);
 
 			writer.StartObject();
 			writer.String("type");
 			writer.String("reject");
-			writer.String("expectedVersion");
-			writer.Int(expectedVersion);
+			//writer.String("expectedVersion");
+			//writer.Int(expectedVersion);
 			writer.EndObject();
 
 			con->send(s.GetString());
@@ -168,26 +171,26 @@ namespace agdg {
 			configure(*this, d);
 			configureArray(realms, d, "realms");
 
-			db = IJsonLoginDB::Create("db/" + serviceName + "/");
+			db = IJsonLoginDB::create("db/" + serviceName + "/");
 		}
 
-		virtual void Init() override {
+		virtual void init() override {
 			server.init_asio();
 			server.set_reuse_addr(true);
 
 			server.clear_access_channels(websocketpp::log::alevel::all);
 
-			server.set_open_handler(bind(&LoginServer::OnOpen, this, _1));
+			server.set_open_handler(bind(&LoginServer::on_open, this, _1));
 
 			server.listen(listenPort);
 			server.start_accept();
 		}
 
-		virtual void Start() override {
-			thread = std::thread(&LoginServer::Run, this);
+		virtual void start() override {
+			thread = std::thread(&LoginServer::run, this);
 		}
 
-		virtual void Stop() override {
+		virtual void stop() override {
 			// FIXME: end all connections
 
 			server.stop();
@@ -202,12 +205,17 @@ namespace agdg {
 			server_closure_message = message;
 		}
 
-		void get_news(std::vector<db::NewsEntry>& news) {
-			db->get_news(news);
+		virtual void post_news(std::string&& title_html, std::string&& contents_html) override {
+			db->post_news(std::move(title_html), std::move(contents_html));
 		}
 
-		const std::vector<Realm>& GetRealms() const { return realms;  }
-		const std::string& GetServerName() const { return serverName; }
+		virtual void reopen_server() override {
+			server_closed = false;
+		}
+
+		void get_news(std::vector<db::NewsEntry>& news) { db->get_news(news); }
+		const std::vector<Realm>& get_realms() const { return realms;  }
+		const std::string& get_server_name() const { return serverName; }
 
 		bool is_server_closed(std::string& message_out) {
 			if (server_closed) {
@@ -220,11 +228,11 @@ namespace agdg {
 				return false;
 		}
 
-		bool Login(connection_ptr con, const std::string& username, const std::string& password, AccountSnapshot& snapshot_out) {
+		bool login(connection_ptr con, const std::string& username, const std::string& password, AccountSnapshot& snapshot_out) {
 			if (!ValidateUsername(username))
 				return false;
 
-			if (forceAnonymousLogin) {
+			if (anonymousLogin) {
 				snapshot_out.name = username;
 				snapshot_out.trusted = false;
 				return true;
@@ -233,16 +241,10 @@ namespace agdg {
 				return db->VerifyCredentials(username, password, con->get_host(), snapshot_out);
 		}
 
-		virtual void post_news(std::string&& title_html, std::string&& contents_html) override {
-			db->post_news(std::move(title_html), std::move(contents_html));
-		}
-
-		virtual void reopen_server() override {
-			server_closed = false;
-		}
+		bool uses_anonymous_login() const { return anonymousLogin; }
 
 	private:
-		static void ForwardMessage(LoginSession* session, connection_hdl hdl, Server::message_ptr msg) {
+		static void on_message(LoginSession* session, connection_hdl hdl, Server::message_ptr msg) {
 			rapidjson::Document d;
 			d.Parse(msg->get_payload().c_str());
 
@@ -256,15 +258,15 @@ namespace agdg {
 			}
 		}
 
-		void OnOpen(connection_hdl hdl) {
+		void on_open(connection_hdl hdl) {
 			connection_ptr con = server.get_con_from_hdl(hdl);
 
 			con->instance = make_unique<LoginSession>(this, con);
 
-			con->set_message_handler(bind(&LoginServer::ForwardMessage, con->instance.get(), _1, _2));
+			con->set_message_handler(bind(&LoginServer::on_message, con->instance.get(), _1, _2));
 		}
 
-		void Run() {
+		void run() {
 			server.run();
 		}
 
@@ -275,7 +277,7 @@ namespace agdg {
 
 		std::string serverName;
 		int listenPort;
-		bool forceAnonymousLogin;
+		bool anonymousLogin;
 
 		bool server_closed = false;
 		std::string server_closure_message;
@@ -286,7 +288,7 @@ namespace agdg {
 		REFL_BEGIN("LoginServer", 1)
 			REFL_MUST_CONFIG(serverName)
 			REFL_MUST_CONFIG(listenPort)
-			REFL_MUST_CONFIG(forceAnonymousLogin)
+			REFL_MUST_CONFIG(anonymousLogin)
 		REFL_END
 	};
 
@@ -306,12 +308,12 @@ namespace agdg {
 					std::vector<db::NewsEntry> news;
 					server->get_news(news);
 
-					protocol.send_hello(server->GetServerName(), news);
+					protocol.send_hello(server->get_server_name(), server->uses_anonymous_login(), news);
 					this->clientVersion = clientVersion;
 				}
 			}
 			else {
-				protocol.SendReject(kExpectedClientVersion);
+				protocol.send_reject(kExpectedClientVersion);
 			}
 		}
 		else {
@@ -327,19 +329,19 @@ namespace agdg {
 
 			// FIXME: this really should be done asynchronously
 			AccountSnapshot account_snapshot;
-			bool ok = server->Login(con, username, password, account_snapshot);
+			bool ok = server->login(con, username, password, account_snapshot);
 
 			if (ok) {
 				auto token = g_token_manager.assign_account_token(account_snapshot);
-				protocol.SendLoginSuccess(HashUtils::hash_to_hex_string(token), server->GetRealms());
+				protocol.send_login_success(HashUtils::hash_to_hex_string(token), server->get_realms());
 			}
 			else {
-				protocol.SendError("Invalid username or password");
+				protocol.send_error("Invalid username or password");
 			}
 		}
 	}
 
-	unique_ptr<ILoginServer> ILoginServer::Create(const std::string& serviceName, const rapidjson::Value& config) {
+	unique_ptr<ILoginServer> ILoginServer::create(const std::string& serviceName, const rapidjson::Value& config) {
 		return make_unique<LoginServer>(serviceName, config);
 	}
 }

@@ -70,7 +70,7 @@ namespace agdg {
 		int next_eid = 1;
 	};
 
-	unique_ptr<ZoneInstance> ZoneInstance::Create(IZone* zone) {
+	unique_ptr<ZoneInstance> ZoneInstance::create(IZone* zone) {
 		return make_unique<ZoneInstanceImpl>(zone);
 	}
 }

@@ -36,7 +36,7 @@ namespace agdg {
 
 	class ZoneInstance {
 	public:
-		static unique_ptr<ZoneInstance> Create(IZone* zone);
+		static unique_ptr<ZoneInstance> create(IZone* zone);
 
 		virtual int add_entity(Entity* entity) = 0;
 		virtual void remove_entity(int eid) = 0;

@@ -8,6 +8,6 @@
 namespace agdg {
 	class IRealmServer : public IService {
 	public:
-		static unique_ptr<IRealmServer> Create(const std::string& serviceName, const rapidjson::Value& config);
+		static unique_ptr<IRealmServer> create(const std::string& serviceName, const rapidjson::Value& config);
 	};
 }

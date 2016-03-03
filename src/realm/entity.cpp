@@ -3,7 +3,7 @@
 namespace agdg {
 	class EntityImpl : public Entity {
 	public:
-		EntityImpl(PlayerCharacter* pc) : pc(pc), pos{0, 0, 0.5f}, dir{}, velocity{} {}
+		EntityImpl(PlayerCharacter* pc) : pc(pc), pos{0, 0, 0.5f}, dir{} {}
 
 		virtual const std::string& get_name() override { return pc->get_name(); }
 
@@ -18,7 +18,7 @@ namespace agdg {
 	private:
 		PlayerCharacter* pc;
 
-		glm::vec3 pos, dir, velocity;
+		glm::vec3 pos, dir;
 	};
 
 	unique_ptr<Entity> Entity::create_player_entity(PlayerCharacter* pc) {

@@ -1,7 +1,7 @@
 #include <world/zonemanager.hpp>
 
 #include <utility/contentscanner.hpp>
-#include <utility/logging.hpp>
+#include <agdg/logging.hpp>
 #include <utility/hashutils.hpp>
 #include <utility/rapidjsonutils.hpp>
 
@@ -28,8 +28,8 @@ namespace agdg {
 			hash = content_mgr->put(d, false);
 		}
 
-		virtual const std::string& GetName() override { return name; }
-		virtual const SHA3_224& GetHash() override { return hash;  }
+		virtual const std::string& get_name() override { return name; }
+		virtual const SHA3_224& get_hash() override { return hash;  }
 
 	private:
 		void resolve_dependencies(IContentManager* content_mgr, rapidjson::Document& d) {
@@ -44,13 +44,13 @@ namespace agdg {
 	public:
 		ZoneManager(IContentManager* content_mgr) : content_mgr(content_mgr) {}
 
-		virtual IZone* GetZoneById(const std::string& id) override {
+		virtual IZone* get_zone_by_id(const std::string& id) override {
 			auto z = zones.find(id);
 
 			return (z != zones.end()) ? z->second.get() : nullptr;
 		}
 
-		virtual void ReloadContent() override {
+		virtual void reload_content() override {
 			ContentScanner::ScanDirectory("world/zones", [this](auto path, auto filename) {
 				std::string zoneName(filename, strlen(filename) - 5);
 
@@ -70,7 +70,7 @@ namespace agdg {
 		std::unordered_map<std::string, std::unique_ptr<Zone>> zones;
 	};
 
-	unique_ptr<IZoneManager> IZoneManager::Create(IContentManager* content_mgr) {
+	unique_ptr<IZoneManager> IZoneManager::create(IContentManager* content_mgr) {
 		return make_unique<ZoneManager>(content_mgr);
 	}
 }

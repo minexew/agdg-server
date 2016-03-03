@@ -7,9 +7,11 @@ namespace agdg {
 	public:
 		virtual ~IService() {}
 
-		virtual void Init() = 0;
-		virtual void Start() = 0;
-		virtual void Stop() = 0;
+		// may throw!
+		virtual void init() = 0;
+		virtual void start() = 0;
+
+		virtual void stop() = 0;
 
 		virtual void close_server(const std::string& message) {}
 		virtual void reopen_server() {}

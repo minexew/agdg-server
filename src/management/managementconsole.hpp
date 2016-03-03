@@ -8,6 +8,6 @@
 namespace agdg {
 	class IManagementConsole : public IService {
 	public:
-		static unique_ptr<IManagementConsole> Create(const std::string& serviceName, const rapidjson::Value& config);
+		static unique_ptr<IManagementConsole> create(const std::string& serviceName, const rapidjson::Value& config);
 	};
 }

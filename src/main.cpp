@@ -1,6 +1,6 @@
 #include <agdg/config.hpp>
 #include <agdg/serverlifecycle.hpp>
-#include <utility/logging.hpp>
+#include <agdg/logging.hpp>
 #include <tokenmanager.hpp>
 
 #include <reflection/base.hpp>
@@ -56,8 +56,8 @@ namespace agdg {
 
 			init_ctrl_c_handler();
 
-			g_serverLifecycle->Start();
-			g_serverLifecycle->Run();
+			g_serverLifecycle->start();
+			g_serverLifecycle->run();
 		}
 		catch (const websocketpp::exception& e) {
 			std::cout << e.what() << std::endl;

@@ -1,210 +1,224 @@
-bool CHello::Decode(const uint8_t* buffer, size_t length) {
-    if (!Read(buffer, length, token)) return false;
+bool CHello::decode(const uint8_t* buffer, size_t length) {
+    if (!read(buffer, length, token)) return false;
     return true;
 }
 
-bool CHello::Encode(std::ostream& out) const {
-    Begin(out, kCHello);
-    if (!Write(out, token)) return false;
+bool CHello::encode(std::vector<uint8_t>& out, uint8_t cookie) const {
+    auto offset = begin(out, CHello::code, cookie);
+    if (!offset) return false;
+    if (!write(out, token)) return false;
+    return end(out, offset);
+}
+
+bool CEnterWorld::decode(const uint8_t* buffer, size_t length) {
+    if (!read(buffer, length, characterName)) return false;
     return true;
 }
 
-bool CEnterWorld::Decode(const uint8_t* buffer, size_t length) {
-    if (!Read(buffer, length, characterName)) return false;
+bool CEnterWorld::encode(std::vector<uint8_t>& out, uint8_t cookie) const {
+    auto offset = begin(out, CEnterWorld::code, cookie);
+    if (!offset) return false;
+    if (!write(out, characterName)) return false;
+    return end(out, offset);
+}
+
+bool CZoneLoaded::decode(const uint8_t* buffer, size_t length) {
     return true;
 }
 
-bool CEnterWorld::Encode(std::ostream& out) const {
-    Begin(out, kCEnterWorld);
-    if (!Write(out, characterName)) return false;
+bool CZoneLoaded::encode(std::vector<uint8_t>& out, uint8_t cookie) const {
+    auto offset = begin(out, CZoneLoaded::code, cookie);
+    if (!offset) return false;
+    return end(out, offset);
+}
+
+bool CPlayerMovement::decode(const uint8_t* buffer, size_t length) {
+    if (!read(buffer, length, pos)) return false;
+    if (!read(buffer, length, dir)) return false;
     return true;
 }
 
-bool CZoneLoaded::Decode(const uint8_t* buffer, size_t length) {
+bool CPlayerMovement::encode(std::vector<uint8_t>& out, uint8_t cookie) const {
+    auto offset = begin(out, CPlayerMovement::code, cookie);
+    if (!offset) return false;
+    if (!write(out, pos)) return false;
+    if (!write(out, dir)) return false;
+    return end(out, offset);
+}
+
+bool CPong::decode(const uint8_t* buffer, size_t length) {
     return true;
 }
 
-bool CZoneLoaded::Encode(std::ostream& out) const {
-    Begin(out, kCZoneLoaded);
+bool CPong::encode(std::vector<uint8_t>& out, uint8_t cookie) const {
+    auto offset = begin(out, CPong::code, cookie);
+    if (!offset) return false;
+    return end(out, offset);
+}
+
+bool CChatSay::decode(const uint8_t* buffer, size_t length) {
+    if (!read(buffer, length, text)) return false;
     return true;
 }
 
-bool CPlayerMovement::Decode(const uint8_t* buffer, size_t length) {
-    if (!Read(buffer, length, pos)) return false;
-    if (!Read(buffer, length, dir)) return false;
-    return true;
+bool CChatSay::encode(std::vector<uint8_t>& out, uint8_t cookie) const {
+    auto offset = begin(out, CChatSay::code, cookie);
+    if (!offset) return false;
+    if (!write(out, text)) return false;
+    return end(out, offset);
 }
 
-bool CPlayerMovement::Encode(std::ostream& out) const {
-    Begin(out, kCPlayerMovement);
-    if (!Write(out, pos)) return false;
-    if (!Write(out, dir)) return false;
-    return true;
-}
-
-bool CPong::Decode(const uint8_t* buffer, size_t length) {
-    return true;
-}
-
-bool CPong::Encode(std::ostream& out) const {
-    Begin(out, kCPong);
-    return true;
-}
-
-bool CChatSay::Decode(const uint8_t* buffer, size_t length) {
-    if (!Read(buffer, length, text)) return false;
-    return true;
-}
-
-bool CChatSay::Encode(std::ostream& out) const {
-    Begin(out, kCChatSay);
-    if (!Write(out, text)) return false;
-    return true;
-}
-
-bool SHello::Decode(const uint8_t* buffer, size_t length) {
+bool SHello::decode(const uint8_t* buffer, size_t length) {
     uint32_t characters_count;
-    if (!Read(buffer, length, characters_count)) return false;
+    if (!read(buffer, length, characters_count)) return false;
 
     for (size_t i = 0; i < characters_count; i++) {
         characters.emplace_back();
-    if (!Read(buffer, length, characters.back())) return false;
+    if (!read(buffer, length, characters.back())) return false;
     }
 
     return true;
 }
 
-bool SHello::Encode(std::ostream& out) const {
-    Begin(out, kSHello);
-    if (!Write<uint32_t>(out, characters.size())) return false;
+bool SHello::encode(std::vector<uint8_t>& out, uint8_t cookie) const {
+    auto offset = begin(out, SHello::code, cookie);
+    if (!offset) return false;
+    if (!write<uint32_t>(out, characters.size())) return false;
 
     for (size_t i = 0; i < characters.size(); i++) {
-    if (!Write(out, characters[i])) return false;
+    if (!write(out, characters[i])) return false;
     }
 
+    return end(out, offset);
+}
+
+bool SLoadZone::decode(const uint8_t* buffer, size_t length) {
+    if (!read(buffer, length, zoneName)) return false;
+    if (!read(buffer, length, zoneRef)) return false;
     return true;
 }
 
-bool SLoadZone::Decode(const uint8_t* buffer, size_t length) {
-    if (!Read(buffer, length, zoneName)) return false;
-    if (!Read(buffer, length, zoneRef)) return false;
-    return true;
+bool SLoadZone::encode(std::vector<uint8_t>& out, uint8_t cookie) const {
+    auto offset = begin(out, SLoadZone::code, cookie);
+    if (!offset) return false;
+    if (!write(out, zoneName)) return false;
+    if (!write(out, zoneRef)) return false;
+    return end(out, offset);
 }
 
-bool SLoadZone::Encode(std::ostream& out) const {
-    Begin(out, kSLoadZone);
-    if (!Write(out, zoneName)) return false;
-    if (!Write(out, zoneRef)) return false;
-    return true;
-}
-
-bool SZoneState::Decode(const uint8_t* buffer, size_t length) {
-    if (!Read(buffer, length, playerEid)) return false;
-    if (!Read(buffer, length, playerName)) return false;
-    if (!Read(buffer, length, playerPos)) return false;
-    if (!Read(buffer, length, playerDir)) return false;
+bool SZoneState::decode(const uint8_t* buffer, size_t length) {
+    if (!read(buffer, length, playerEid)) return false;
+    if (!read(buffer, length, playerName)) return false;
+    if (!read(buffer, length, playerPos)) return false;
+    if (!read(buffer, length, playerDir)) return false;
     uint32_t entities_count;
-    if (!Read(buffer, length, entities_count)) return false;
+    if (!read(buffer, length, entities_count)) return false;
 
     for (size_t i = 0; i < entities_count; i++) {
         entities.emplace_back();
-    if (!Read(buffer, length, entities.back().eid)) return false;
-    if (!Read(buffer, length, entities.back().flags)) return false;
-    if (!Read(buffer, length, entities.back().name)) return false;
-    if (!Read(buffer, length, entities.back().pos)) return false;
-    if (!Read(buffer, length, entities.back().dir)) return false;
+    if (!read(buffer, length, entities.back().eid)) return false;
+    if (!read(buffer, length, entities.back().flags)) return false;
+    if (!read(buffer, length, entities.back().name)) return false;
+    if (!read(buffer, length, entities.back().pos)) return false;
+    if (!read(buffer, length, entities.back().dir)) return false;
     }
 
     return true;
 }
 
-bool SZoneState::Encode(std::ostream& out) const {
-    Begin(out, kSZoneState);
-    if (!Write(out, playerEid)) return false;
-    if (!Write(out, playerName)) return false;
-    if (!Write(out, playerPos)) return false;
-    if (!Write(out, playerDir)) return false;
-    if (!Write<uint32_t>(out, entities.size())) return false;
+bool SZoneState::encode(std::vector<uint8_t>& out, uint8_t cookie) const {
+    auto offset = begin(out, SZoneState::code, cookie);
+    if (!offset) return false;
+    if (!write(out, playerEid)) return false;
+    if (!write(out, playerName)) return false;
+    if (!write(out, playerPos)) return false;
+    if (!write(out, playerDir)) return false;
+    if (!write<uint32_t>(out, entities.size())) return false;
 
     for (size_t i = 0; i < entities.size(); i++) {
-    if (!Write(out, entities[i].eid)) return false;
-    if (!Write(out, entities[i].flags)) return false;
-    if (!Write(out, entities[i].name)) return false;
-    if (!Write(out, entities[i].pos)) return false;
-    if (!Write(out, entities[i].dir)) return false;
+    if (!write(out, entities[i].eid)) return false;
+    if (!write(out, entities[i].flags)) return false;
+    if (!write(out, entities[i].name)) return false;
+    if (!write(out, entities[i].pos)) return false;
+    if (!write(out, entities[i].dir)) return false;
     }
 
+    return end(out, offset);
+}
+
+bool SPing::decode(const uint8_t* buffer, size_t length) {
     return true;
 }
 
-bool SPing::Decode(const uint8_t* buffer, size_t length) {
+bool SPing::encode(std::vector<uint8_t>& out, uint8_t cookie) const {
+    auto offset = begin(out, SPing::code, cookie);
+    if (!offset) return false;
+    return end(out, offset);
+}
+
+bool SEntitySpawn::decode(const uint8_t* buffer, size_t length) {
+    if (!read(buffer, length, entity.eid)) return false;
+    if (!read(buffer, length, entity.flags)) return false;
+    if (!read(buffer, length, entity.name)) return false;
+    if (!read(buffer, length, entity.pos)) return false;
+    if (!read(buffer, length, entity.dir)) return false;
     return true;
 }
 
-bool SPing::Encode(std::ostream& out) const {
-    Begin(out, kSPing);
+bool SEntitySpawn::encode(std::vector<uint8_t>& out, uint8_t cookie) const {
+    auto offset = begin(out, SEntitySpawn::code, cookie);
+    if (!offset) return false;
+    if (!write(out, entity.eid)) return false;
+    if (!write(out, entity.flags)) return false;
+    if (!write(out, entity.name)) return false;
+    if (!write(out, entity.pos)) return false;
+    if (!write(out, entity.dir)) return false;
+    return end(out, offset);
+}
+
+bool SEntityDespawn::decode(const uint8_t* buffer, size_t length) {
+    if (!read(buffer, length, eid)) return false;
     return true;
 }
 
-bool SEntitySpawn::Decode(const uint8_t* buffer, size_t length) {
-    if (!Read(buffer, length, entity.eid)) return false;
-    if (!Read(buffer, length, entity.flags)) return false;
-    if (!Read(buffer, length, entity.name)) return false;
-    if (!Read(buffer, length, entity.pos)) return false;
-    if (!Read(buffer, length, entity.dir)) return false;
+bool SEntityDespawn::encode(std::vector<uint8_t>& out, uint8_t cookie) const {
+    auto offset = begin(out, SEntityDespawn::code, cookie);
+    if (!offset) return false;
+    if (!write(out, eid)) return false;
+    return end(out, offset);
+}
+
+bool SEntityUpdate::decode(const uint8_t* buffer, size_t length) {
+    if (!read(buffer, length, eid)) return false;
+    if (!read(buffer, length, pos)) return false;
+    if (!read(buffer, length, dir)) return false;
+    if (!read(buffer, length, latency)) return false;
     return true;
 }
 
-bool SEntitySpawn::Encode(std::ostream& out) const {
-    Begin(out, kSEntitySpawn);
-    if (!Write(out, entity.eid)) return false;
-    if (!Write(out, entity.flags)) return false;
-    if (!Write(out, entity.name)) return false;
-    if (!Write(out, entity.pos)) return false;
-    if (!Write(out, entity.dir)) return false;
+bool SEntityUpdate::encode(std::vector<uint8_t>& out, uint8_t cookie) const {
+    auto offset = begin(out, SEntityUpdate::code, cookie);
+    if (!offset) return false;
+    if (!write(out, eid)) return false;
+    if (!write(out, pos)) return false;
+    if (!write(out, dir)) return false;
+    if (!write(out, latency)) return false;
+    return end(out, offset);
+}
+
+bool SChatSay::decode(const uint8_t* buffer, size_t length) {
+    if (!read(buffer, length, eid)) return false;
+    if (!read(buffer, length, text)) return false;
+    if (!read(buffer, length, html)) return false;
     return true;
 }
 
-bool SEntityDespawn::Decode(const uint8_t* buffer, size_t length) {
-    if (!Read(buffer, length, eid)) return false;
-    return true;
-}
-
-bool SEntityDespawn::Encode(std::ostream& out) const {
-    Begin(out, kSEntityDespawn);
-    if (!Write(out, eid)) return false;
-    return true;
-}
-
-bool SEntityUpdate::Decode(const uint8_t* buffer, size_t length) {
-    if (!Read(buffer, length, eid)) return false;
-    if (!Read(buffer, length, pos)) return false;
-    if (!Read(buffer, length, dir)) return false;
-    if (!Read(buffer, length, latency)) return false;
-    return true;
-}
-
-bool SEntityUpdate::Encode(std::ostream& out) const {
-    Begin(out, kSEntityUpdate);
-    if (!Write(out, eid)) return false;
-    if (!Write(out, pos)) return false;
-    if (!Write(out, dir)) return false;
-    if (!Write(out, latency)) return false;
-    return true;
-}
-
-bool SChatSay::Decode(const uint8_t* buffer, size_t length) {
-    if (!Read(buffer, length, eid)) return false;
-    if (!Read(buffer, length, text)) return false;
-    if (!Read(buffer, length, html)) return false;
-    return true;
-}
-
-bool SChatSay::Encode(std::ostream& out) const {
-    Begin(out, kSChatSay);
-    if (!Write(out, eid)) return false;
-    if (!Write(out, text)) return false;
-    if (!Write(out, html)) return false;
-    return true;
+bool SChatSay::encode(std::vector<uint8_t>& out, uint8_t cookie) const {
+    auto offset = begin(out, SChatSay::code, cookie);
+    if (!offset) return false;
+    if (!write(out, eid)) return false;
+    if (!write(out, text)) return false;
+    if (!write(out, html)) return false;
+    return end(out, offset);
 }
 
