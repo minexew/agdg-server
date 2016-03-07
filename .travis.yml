@@ -1,8 +1,24 @@
 language: cpp
 sudo: required
-dist: trusty
+addons:
+  apt:
+    sources:
+      - george-edison55-precise-backports # cmake 3.2.3 / doxygen 1.8.3
+      - ubuntu-toolchain-r-test # gcc-5
+    packages:
+      - cmake
+      - cmake-data
 before_install:
   - if [ $TRAVIS_OS_NAME == osx ]; then brew update && brew upgrade cmake; fi
+
+  # only update gcc if we need to, otherwise it breaks clang
+  - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-5; fi
+
+  - git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+  - export PATH=`pwd`/depot_tools:"$PATH"
+  - fetch v8
+  - cd v8
+  - make
 script: cmake . && make
 compiler:
   - clang
