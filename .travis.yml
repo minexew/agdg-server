@@ -25,6 +25,7 @@ before_install:
   - fetch v8
   - cd v8
   - make native
+  - cd ..
 script: cmake . && make
 compiler:
   - clang
