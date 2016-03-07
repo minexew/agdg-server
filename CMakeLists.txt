@@ -24,7 +24,7 @@ target_include_directories(${BINARY} PUBLIC src
 if(UNIX)
 	if (NOT APPLE)
 		set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++ -s")
-		target_link_libraries($BINARY pthread)
+		target_link_libraries(${BINARY} pthread)
 	endif()
 endif()
 
