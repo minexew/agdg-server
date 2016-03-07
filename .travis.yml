@@ -13,8 +13,13 @@ addons:
 before_install:
   - if [ $TRAVIS_OS_NAME == osx ]; then brew update && brew upgrade cmake; fi
 
+  - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" = "clang++" ]; then export CC=clang-3.5; fi
+  - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" = "clang++" ]; then export CXX=clang++-3.5; fi
+
   # only update gcc if we need to, otherwise it breaks clang
   - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-5; fi
+  - if [ "$CXX" = "g++" ]; then export CC=gcc-5; fi
+  - if [ "$CXX" = "g++" ]; then export CXX=g++-5; fi
 
   - git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
   - export PATH=`pwd`/depot_tools:"$PATH"
