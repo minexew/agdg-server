@@ -32,10 +32,10 @@ namespace agdg {
 	typedef Server::connection_ptr connection_ptr;
 	typedef Server::message_ptr message_ptr;
 
-	struct Realm {
+	struct RealmInfo {
 		std::string name, url;
 
-		REFL_BEGIN("LoginServer.Realm", 1)
+		REFL_BEGIN("LoginServer.RealmInfo", 1)
 			REFL_MUST_CONFIG(name)
 			REFL_MUST_CONFIG(url)
 		REFL_END
@@ -59,7 +59,7 @@ namespace agdg {
 			con->send(s.GetString());
 		}
 
-		void send_login_success(const std::string& token, const std::vector<Realm>& realms) {
+		void send_login_success(const std::string& token, const std::vector<RealmInfo>& realms) {
 			rapidjson::StringBuffer s;
 			rapidjson::Writer<rapidjson::StringBuffer> writer(s);
 
@@ -214,7 +214,7 @@ namespace agdg {
 		}
 
 		void get_news(std::vector<db::NewsEntry>& news) { db->get_news(news); }
-		const std::vector<Realm>& get_realms() const { return realms;  }
+		const std::vector<RealmInfo>& get_realms() const { return realms;  }
 		const std::string& get_server_name() const { return serverName; }
 
 		bool is_server_closed(std::string& message_out) {
@@ -283,7 +283,7 @@ namespace agdg {
 		std::string server_closure_message;
 		std::mutex server_closure_message_mutex;
 
-		std::vector<Realm> realms;
+		std::vector<RealmInfo> realms;
 
 		REFL_BEGIN("LoginServer", 1)
 			REFL_MUST_CONFIG(serverName)

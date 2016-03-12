@@ -47,11 +47,11 @@ namespace agdg {
 	}
 
 	void RealmSession::handle(CChatSay& msg) {
-		if (!inst || !pc || !player_eid)
+		if (!inst || !pc || !player_entity)
 			return;
 
 		g_log->Log("<%s> %s", pc->get_name().c_str(), msg.text.c_str());
-		inst->broadcast_chat(player_eid, msg.text, account_snapshot.trusted);
+		inst->broadcast_chat(player_entity.get(), msg.text, account_snapshot.trusted);
 	}
 
 	void RealmSession::handle(CHello& msg) {
@@ -92,7 +92,7 @@ namespace agdg {
 			return;
 
 		player_entity->set_pos_dir(msg.pos, msg.dir);
-		inst->broadcast_entity_update(player_eid, msg.pos, msg.dir, client_latency / 2);
+		inst->broadcast_entity_update(player_entity.get(), msg.pos, msg.dir, client_latency / 2);
 
 		ping.update(*this);
 	}
@@ -111,7 +111,7 @@ namespace agdg {
 		SZoneState reply;
 
 		// create player entity
-		player_entity = Entity::create_player_entity(pc.get());
+		player_entity = Entity::create_player_entity(realm, pc.get());
 
 		inst->iterate_entities([this, &reply](int eid, auto entity) {
 			reply.entities.emplace_back();
@@ -136,6 +136,8 @@ namespace agdg {
 
 		inst->broadcast_chat(0, "<strong>" + pc->get_name() + "</strong> joined.", true);
 		inst->subscribe(this);
+
+		inst->get_dom()->on_player_has_entered(player_entity.get());
 	}
 
 	void RealmSession::handle_command(int code, int cookie, const uint8_t* payload, size_t payload_length) {
@@ -161,8 +163,8 @@ namespace agdg {
 		}
 	}
 
-	void RealmSession::on_chat(int eid, const std::string& text, bool html) {
-		SChatSay msg{ eid, text, html };
+	void RealmSession::on_chat(Entity* entity, const std::string& text, bool html) {
+		SChatSay msg{ entity ? entity->get_eid() : 0, text, html };
 		queue(msg);
 	}
 
@@ -181,10 +183,10 @@ namespace agdg {
 		queue(msg);
 	}
 
-	void RealmSession::on_entity_update(int eid, const glm::vec3& pos, const glm::vec3& dir, int half_latency) {
-		if (eid != player_eid) {
+	void RealmSession::on_entity_update(Entity* entity, const glm::vec3& pos, const glm::vec3& dir, int half_latency) {
+		if (entity != player_entity.get()) {
 			SEntityUpdate msg;
-			msg.eid = eid;
+			msg.eid = entity->get_eid();
 			msg.pos = pos;
 			msg.dir = dir;
 			msg.latency = half_latency + this->client_latency / 2;

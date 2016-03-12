@@ -2,6 +2,7 @@
 
 #include <realm/realmserver.hpp>
 #include <realm/zoneinstance.hpp>
+#include <scripting/realm_dom.hpp>
 #include <world/zonemanager.hpp>
 #include <websocketpp_configuration.hpp>
 
@@ -16,6 +17,7 @@
 namespace agdg {
 	using namespace std::chrono;
 
+	class Realm;
 	class RealmSession;
 
 	typedef websocketpp::server<configuration<RealmSession>> Server;
@@ -30,6 +32,7 @@ namespace agdg {
 	class RealmServer : public IRealmServer {
 	public:
 		RealmServer(const std::string& serviceName, const rapidjson::Value& d);
+		~RealmServer();
 
 		virtual void init() override;
 		virtual void start() override;
@@ -48,12 +51,12 @@ namespace agdg {
 		void on_message(RealmSession* session, websocketpp::connection_hdl hdl, Server::message_ptr msg);
 		void on_open(websocketpp::connection_hdl hdl);
 
-		void run() {
-			server.run();
-		}
+		void run();
 
 		std::thread thread;
 		Server server;
+
+		std::unique_ptr<Realm> realm;
 
 		//std::unique_ptr<ILoginDB> db;
 

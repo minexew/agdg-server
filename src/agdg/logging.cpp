@@ -20,6 +20,7 @@ namespace agdg {
 
 	enum class LogType {
 		info,
+		script,
 		warning,
 		error,
 	};
@@ -53,6 +54,10 @@ namespace agdg {
 #else
 	class ConsoleColors {
 	public:
+		void reset() {
+			printf("\e[0m");
+		}
+
 		void set_grey() {
 			printf("\e[37m");
 		}
@@ -63,10 +68,6 @@ namespace agdg {
 
 		void set_yellow() {
 			printf("\e[33m");
-		}
-
-		void set_white() {
-			printf("\e[97m");
 		}
 	};
 #endif
@@ -91,6 +92,13 @@ namespace agdg {
 			va_list args;
 			va_start(args, format);
 			logv(LogType::warning, format, args);
+			va_end(args);
+		}
+
+		void script(const char* format, ...) {
+			va_list args;
+			va_start(args, format);
+			logv(LogType::script, format, args);
 			va_end(args);
 		}
 
@@ -145,7 +153,7 @@ namespace agdg {
 					;
 			}
 
-			s_consoleColors.set_white();
+			s_consoleColors.reset();
 			puts(buffer);
 
 			s_consoleColors.set_grey();

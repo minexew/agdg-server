@@ -9,6 +9,7 @@ namespace agdg {
 	public:
 		virtual void error(const char* format, ...) = 0;
 		virtual void warning(const char* format, ...) = 0;
+		virtual void script(const char* format, ...) = 0;
 
 		virtual void get_all_messages(std::function<void(LogTimestamp, const std::string&)> callback) = 0;
 

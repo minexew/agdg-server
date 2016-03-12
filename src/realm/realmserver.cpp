@@ -1,3 +1,4 @@
+#include <realm/realm.hpp>
 #include <realm/realmserverimpl.hpp>
 #include <realm/realmsession.hpp>
 
@@ -24,13 +25,20 @@ namespace agdg {
 		zone_mgr = IZoneManager::create(content_mgr.get());
 		zone_mgr->reload_content();
 
-		IZone* test_zone = zone_mgr->get_zone_by_id("test_zone");
-		world_zone = ZoneInstance::create(test_zone);
-
 		//db.reset(IJsonRealmDB::Create("db/" + serviceName + "/"));
 	}
 
+	RealmServer::~RealmServer() {
+		// must go down before the context
+		realm.reset();
+	}
+
 	void RealmServer::init() {
+		/*
+#ifdef WITH_V8
+		init_v8();
+#endif
+
 		server.init_asio();
 		server.set_reuse_addr(true);
 
@@ -39,9 +47,19 @@ namespace agdg {
 		server.set_open_handler(bind(&RealmServer::on_open, this, _1));
 		server.set_close_handler(bind(&RealmServer::on_close, this, _1));
 
+		hooks->on_realm_init();
+
+		IZone* test_zone = zone_mgr->get_zone_by_id("test_zone");
+		world_zone = ZoneInstance::create(hooks.get(), test_zone);
+
 		server.listen(listenPort);
 		server.start_accept();
+		*/
 	}
+
+#ifdef WITH_V8
+	
+#endif
 
 	void RealmServer::on_close(websocketpp::connection_hdl hdl) {
 		connection_ptr con = server.get_con_from_hdl(hdl);
@@ -66,9 +84,31 @@ namespace agdg {
 	void RealmServer::on_open(websocketpp::connection_hdl hdl) {
 		connection_ptr con = server.get_con_from_hdl(hdl);
 
-		con->instance = make_unique<RealmSession>(this, con);
+		con->instance = make_unique<RealmSession>(realm.get(), this, con);
 
 		con->set_message_handler(bind(&RealmServer::on_message, this, con->instance.get(), _1, _2));
+	}
+
+	void RealmServer::run() {
+		realm = Realm::create();
+
+		server.init_asio();
+		server.set_reuse_addr(true);
+
+		server.clear_access_channels(websocketpp::log::alevel::all);
+
+		server.set_open_handler(bind(&RealmServer::on_open, this, _1));
+		server.set_close_handler(bind(&RealmServer::on_close, this, _1));
+
+		realm->on_realm_init();
+
+		IZone* test_zone = zone_mgr->get_zone_by_id("test_zone");
+		world_zone = ZoneInstance::create(realm.get(), test_zone);
+
+		server.listen(listenPort);
+		server.start_accept();
+
+		server.run();
 	}
 
 	void RealmServer::start() {

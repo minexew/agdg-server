@@ -1,4 +1,7 @@
+#include <realm/realm.hpp>
 #include <realm/zoneinstance.hpp>
+
+#include <scripting/realm_dom.hpp>
 
 #include <algorithm>
 #include <unordered_map>
@@ -7,11 +10,17 @@
 namespace agdg {
 	class ZoneInstanceImpl : public ZoneInstance {
 	public:
-		ZoneInstanceImpl(IZone* zone) : zone(zone) {}
+		ZoneInstanceImpl(Realm* realm, IZone* zone) : zone(zone), instance_id(1001) {
+			dom = realm->get_dom()->create_zone_instance_dom(this);
+			realm->get_dom()->on_zone_instance_create(this);
+		}
 
 		virtual int add_entity(Entity* entity) override {
 			int eid = next_eid++;
+			entity->set_eid(eid);
 			entities[eid] = entity;
+
+			//dom->on_player_will_enter(entity);
 
 			broadcast_entity_spawn(eid, entity, entity->get_pos(), entity->get_dir());
 
@@ -32,14 +41,25 @@ namespace agdg {
 			listeners.erase(std::remove(listeners.begin(), listeners.end(), listener), listeners.end());
 		}
 
-		virtual void broadcast_chat(int eid, const std::string& text, bool html) override {
+		virtual void broadcast_chat(Entity* entity, const std::string& text, bool html) override {
+			if (!dom->on_chat(entity, text))
+				return;
+
 			for (auto listener : listeners)
-				listener->on_chat(eid, text, html);
+				listener->on_chat(entity, text, html);
 		}
 
-		virtual void broadcast_entity_update(int eid, const glm::vec3& pos, const glm::vec3& dir, int half_latency) override {
+		virtual void broadcast_entity_update(Entity* entity, const glm::vec3& pos, const glm::vec3& dir, int half_latency) override {
 			for (auto listener : listeners)
-				listener->on_entity_update(eid, pos, dir, half_latency);
+				listener->on_entity_update(entity, pos, dir, half_latency);
+		}
+
+		virtual ZoneInstanceDOM* get_dom() override {
+			return dom.get();
+		}
+
+		virtual int get_id() override {
+			return instance_id;
 		}
 
 		virtual IZone* get_zone() override {
@@ -64,13 +84,17 @@ namespace agdg {
 		}
 
 		IZone* zone;
+		int instance_id;
+
 		std::unordered_map<int, Entity*> entities;
 		std::vector<ZoneInstanceListener*> listeners;
+
+		unique_ptr<ZoneInstanceDOM> dom;
 
 		int next_eid = 1;
 	};
 
-	unique_ptr<ZoneInstance> ZoneInstance::create(IZone* zone) {
-		return make_unique<ZoneInstanceImpl>(zone);
+	unique_ptr<ZoneInstance> ZoneInstance::create(Realm* realm, IZone* zone) {
+		return make_unique<ZoneInstanceImpl>(realm, zone);
 	}
 }

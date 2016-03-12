@@ -22,7 +22,8 @@ namespace agdg {
 
 	class RealmSession : private ZoneInstanceListener {
 	public:
-		RealmSession(RealmServer* server, connection_ptr con) : server(server), con(con) {}
+		RealmSession(Realm* realm, RealmServer* server, connection_ptr con)
+				: realm(realm), server(server), con(con) {}
 
 		void close();
 		void on_message(const uint8_t* message, size_t length);
@@ -30,10 +31,10 @@ namespace agdg {
 		void handle_command(int code, int cookie, const uint8_t* payload, size_t payload_length);
 
 	private:
-		virtual void on_chat(int eid, const std::string& text, bool html) override;
+		virtual void on_chat(Entity* entity, const std::string& text, bool html) override;
 		virtual void on_entity_despawn(int eid) override;
 		virtual void on_entity_spawn(int eid, Entity* entity, const glm::vec3& pos, const glm::vec3& dir) override;
-		virtual void on_entity_update(int eid, const glm::vec3& pos, const glm::vec3& dir, int half_latency) override;
+		virtual void on_entity_update(Entity* entity, const glm::vec3& pos, const glm::vec3& dir, int half_latency) override;
 
 		void drop_connection() {} // FIXME
 		void flush_queue();
@@ -56,6 +57,7 @@ namespace agdg {
 
 		void set_command_error_flag();
 
+		Realm* realm;
 		RealmServer* server;
 
 		// connection-related structures
