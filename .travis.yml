@@ -24,9 +24,11 @@ before_install:
   - export PATH=`pwd`/depot_tools:"$PATH"
   - fetch v8
   - cd v8
-  - make -v native
+  - git checkout tags/5.1.84
+  - gclient sync
+  - make VERBOSE=1 native
   - cd ..
-script: cmake . && make -v
+script: cmake . && make VERBOSE=1
 compiler:
   - clang
   - gcc
