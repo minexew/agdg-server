@@ -24,9 +24,9 @@ before_install:
   - export PATH=`pwd`/depot_tools:"$PATH"
   - fetch v8
   - cd v8
-  - make native
+  - make -v native
   - cd ..
-script: cmake . && make
+script: cmake . && make -v
 compiler:
   - clang
   - gcc
