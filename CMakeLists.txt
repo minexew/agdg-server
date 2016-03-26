@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 project(agdg_server)
 
+set(STATIC_RUNTIME OFF CACHE BOOL "Link runtime libraries statically")
 set(WITH_V8 ON CACHE BOOL "Build with V8")
 set(V8_INCLUDE "${PROJECT_SOURCE_DIR}/dependencies/v8/include" CACHE PATH "Path to V8 include/")
 set(V8_LIB "${PROJECT_SOURCE_DIR}/dependencies/v8/out/x64.release" CACHE PATH "Path to V8 out/<target>/")
@@ -32,8 +33,11 @@ target_include_directories(${BINARY} PUBLIC src
 
 if(UNIX)
     if (NOT APPLE)
-		set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++ -s")
-		target_link_libraries(${BINARY} pthread)
+        if (STATIC_RUNTIME)
+		    set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++ -s")
+        endif()
+
+        target_link_libraries(${BINARY} pthread)
 	endif()
 
     if (WITH_V8)
@@ -45,9 +49,13 @@ if(UNIX)
             #file(GLOB_RECURSE V8_LIBS ${V8_LIB}/lib*.dylib)
             set(V8_LIBS ${V8_LIB}/libv8_libplatform.a ${V8_LIB}/libv8_libbase.a ${V8_LIB}/libv8.dylib)
         else()
+            set(V8_LIBS
+                    ${V8_LIB}/obj.target/tools/gyp/libv8_libplatform.a
+                    ${V8_LIB}/obj.target/tools/gyp/libv8.so
+                    ${V8_LIB}/obj.target/third_party/icu/libicui18n.so
+                    ${V8_LIB}/obj.target/third_party/icu/libicuuc.so
+                    )
         endif()
-
-        #file(GLOB_RECURSE V8_LIBS ${V8_LIB}/lib*.a)
 
         target_include_directories(${BINARY} PUBLIC ${V8_INCLUDE})
         target_link_libraries(${BINARY} ${V8_LIBS})
