@@ -29,7 +29,7 @@ before_install:
   - gclient sync
   - make native GYPFLAGS="-Dclang=0"
   - cd ../..
-script: cmake -DV8_LIB=${PROJECT_SOURCE_DIR}/dependencies/v8/out/native/ . && make VERBOSE=1
+script: cmake -DV8_LIB=dependencies/v8/out/native/ . && make VERBOSE=1
 compiler:
   - clang
   - gcc
