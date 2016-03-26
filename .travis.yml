@@ -19,6 +19,7 @@ before_install:
 
   - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" = "g++" ]; then export CC=gcc-5; fi
   - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" = "g++" ]; then export CXX=g++-5; fi
+  - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" = "g++" ]; then export GYPFLAGS="-Dclang=0"; fi
 
   - cd dependencies
   - git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
@@ -27,7 +28,7 @@ before_install:
   - cd v8
   - git checkout tags/5.1.84
   - gclient sync
-  - make native GYPFLAGS="-Dclang=0"
+  - make native GYPFLAGS="$GYPFLAGS"
   - cd ../..
 script: cmake -DV8_LIB=dependencies/v8/out/native/ . && make VERBOSE=1
 compiler:
