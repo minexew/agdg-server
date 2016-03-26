@@ -1,5 +1,5 @@
 language: cpp
-sudo: required
+sudo: false
 addons:
   apt:
     sources:
@@ -7,16 +7,16 @@ addons:
       - llvm-toolchain-precise-3.7 # clang 3.7
       - ubuntu-toolchain-r-test # gcc-5
     packages:
+      - clang-3.7
       - cmake
       - cmake-data
+      - g++-5
 before_install:
   - if [ $TRAVIS_OS_NAME == osx ]; then brew update && brew upgrade cmake; fi
 
-  - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" = "clang++" ]; then sudo apt-get install -qq clang-3.7; fi
   - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" = "clang++" ]; then export CC=clang-3.7; fi
   - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" = "clang++" ]; then export CXX=clang++-3.7; fi
 
-  - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-5; fi
   - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" = "g++" ]; then export CC=gcc-5; fi
   - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" = "g++" ]; then export CXX=g++-5; fi
 
