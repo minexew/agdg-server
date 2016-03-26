@@ -27,9 +27,9 @@ before_install:
   - cd v8
   - git checkout tags/5.1.84
   - gclient sync
-  - make V=1 native
+  - make native GYPFLAGS="-Dclang=0"
   - cd ../..
-script: cmake . && make VERBOSE=1
+script: cmake -DV8_LIB=${PROJECT_SOURCE_DIR}/dependencies/v8/out/native/ . && make VERBOSE=1
 compiler:
   - clang
   - gcc
