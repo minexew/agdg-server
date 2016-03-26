@@ -20,14 +20,15 @@ before_install:
   - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" = "g++" ]; then export CC=gcc-5; fi
   - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" = "g++" ]; then export CXX=g++-5; fi
 
+  - cd dependencies
   - git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
   - export PATH=`pwd`/depot_tools:"$PATH"
   - fetch v8
   - cd v8
   - git checkout tags/5.1.84
   - gclient sync
-  - make VERBOSE=1 native
-  - cd ..
+  - make V=1 native
+  - cd ../..
 script: cmake . && make VERBOSE=1
 compiler:
   - clang
