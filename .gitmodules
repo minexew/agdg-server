@@ -10,3 +10,6 @@
 [submodule "dependencies/reflector"]
 	path = dependencies/reflector
 	url = https://github.com/minexew/reflector.git
+[submodule "dependencies/glm"]
+	path = dependencies/glm
+	url = https://github.com/g-truc/glm.git
