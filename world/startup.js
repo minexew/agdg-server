@@ -17,15 +17,17 @@ function convertToText(obj) {
     //    arrays do.
     if (typeof(obj) == "object" && (obj.join == undefined)) {
         string.push("{");
-        for (prop in obj) {
-            string.push(prop, ": ", convertToText(obj[prop]), ",");
+        var first = true;
+        for (var prop in obj) {
+            if (!first) string.push(", "); else first = false;
+            string.push(prop, ": ", convertToText(obj[prop]));
         };
         string.push("}");
 
     //is array
     } else if (typeof(obj) == "object" && !(obj.join == undefined)) {
         string.push("[")
-        for(prop in obj) {
+        for(var prop in obj) {
             string.push(convertToText(obj[prop]), ",");
         }
         string.push("]")
@@ -44,11 +46,48 @@ function convertToText(obj) {
 
 function print(...args) {
     log_string(args.map(function(value) {
-        if (typeof(value) == 'object')
+        if (value === undefined)
+            return 'undefined';
+        else if (typeof(value) == 'object')
             return convertToText(value)
         else
             return value.toString()
     }).join(' '))
+}
+
+function areClose(a, b) {
+    var a = a.pos;
+    var b = b.pos;
+
+    var dx = a[0] - b[0];
+    var dy = a[1] - b[1];
+    var dz = a[2] - b[2];
+
+    return (dx * dx + dy * dy + dz * dz < 10 * 10);
+}
+
+class BaseAIEntity {
+    constructor(zoneInstance, entity) {
+        this.zoneInstance = zoneInstance;
+        this.entity = entity;
+
+        zoneInstance.onChat((entity, text, html) => {
+            if (entity && areClose(this.entity, entity))
+                this.onChat(entity, text, html);
+
+            return true;
+        });
+
+        //zoneInstance.onEntityDespawn
+    }
+
+    onChat(entity, text, html) {
+    }
+}
+class Abalath extends BaseAIEntity {
+    onChat(entity, text, html) {
+        this.zoneInstance.broadcastChat(this.entity, 'I can hear you, ' + entity.name + '!', false);
+    }
 }
 
 realm.onRealmInit(() => {
@@ -56,14 +95,22 @@ realm.onRealmInit(() => {
 });
 
 realm.onZoneInstanceCreate(instance => {
-	print('onZoneInstanceCreate', instance)
+	print('onZoneInstanceCreate', instance.id)
+
+    entity = instance.spawnTestEntity("Abalath", [4, 4, 0.5]);
+    new Abalath(instance, entity);
 
 	instance.onPlayerHasEntered(player => {
-		print('onPlayerEnter', player)
-		instance.broadcastChat(null, `Hi, <i>${player.name}</i>!`, true)
+		//print('onPlayerEnter', player)
+		//instance.broadcastChat(null, `Hi, <i>${player.name}</i>!`, true)
 	})
 
     instance.onChat((entity, message, html) => {
+        if (message.indexOf('/exec ') === 0) {
+            eval(message.substr(6))
+            return false
+        }
+
         return true
     })
 })

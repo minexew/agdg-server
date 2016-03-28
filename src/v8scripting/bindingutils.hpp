@@ -16,8 +16,35 @@ namespace agdg {
 			return true;
 		}
 
+		static bool from_js_value(v8::Local<v8::Value> js_value, glm::vec3& value_out) {
+			if (!js_value->IsArray())
+				return false;
+
+			auto array = v8::Local<v8::Array>::Cast(js_value);
+
+			for (int i = 0; i < 3; i++)
+				value_out.xyz[i] = array->Get(i)->NumberValue();
+
+			return true;
+		}
+
+		static bool from_js_value(v8::Local<v8::Value> js_value, std::string& value_out) {
+			v8::String::Utf8Value utf8(js_value);
+			value_out = *utf8 ? *utf8 : "";
+			return true;
+		}
+
 		static v8::Local<v8::Value> to_js_value(v8::Isolate* isolate, int value) {
 			return v8::Integer::New(isolate, value);
+		}
+
+		static v8::Local<v8::Value> to_js_value(v8::Isolate* isolate, const glm::vec3& value) {
+			auto array = v8::Array::New(isolate, 3);
+
+			for (int i = 0; i < 3; i++)
+				array->Set(i, v8::Number::New(isolate, value.xyz[i]));
+
+			return array;
 		}
 
 		static v8::Local<v8::Value> to_js_value(v8::Isolate* isolate, const std::string& value) {
@@ -232,21 +259,22 @@ namespace agdg {
 			v8::Local<v8::Value> global = context->Global();
 			v8::Local<v8::Value> call_args[] = { V8Utils::to_js_value(isolate, args)... };
 
+			bool first = true;
 			ReturnValue theReturn;
-			{
-				v8::Local<v8::Function> function = v8::Local<v8::Function>::New(isolate, callback->function);
-				v8::Local<v8::Value> result = function->Call(global, sizeof...(args), call_args);
-
-				V8Utils::from_js_value(result, theReturn);
-			}
 
 			for (; callback; callback = callback->next.get()) {
 				v8::Local<v8::Function> function = v8::Local<v8::Function>::New(isolate, callback->function);
 				v8::Local<v8::Value> result = function->Call(global, sizeof...(args), call_args);
 
-				ReturnValue oneReturn;
-				V8Utils::from_js_value(result, oneReturn);
-				theReturn = fold(theReturn, oneReturn);
+				if (first) {
+					V8Utils::from_js_value(result, theReturn);
+					first = false;
+				}
+				else {
+					ReturnValue oneReturn;
+					V8Utils::from_js_value(result, oneReturn);
+					theReturn = fold(theReturn, oneReturn);
+				}
 			}
 
 			return theReturn;

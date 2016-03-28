@@ -10,7 +10,7 @@
 namespace agdg {
 	class ZoneInstanceImpl : public ZoneInstance {
 	public:
-		ZoneInstanceImpl(Realm* realm, IZone* zone) : zone(zone), instance_id(1001) {
+		ZoneInstanceImpl(Realm* realm, IZone* zone) : realm(realm), zone(zone), instance_id(1001) {
 			dom = realm->get_dom()->create_zone_instance_dom(this);
 			realm->get_dom()->on_zone_instance_create(this);
 		}
@@ -62,6 +62,10 @@ namespace agdg {
 			return instance_id;
 		}
 
+		virtual Realm* get_realm() override {
+			return realm;
+		}
+
 		virtual IZone* get_zone() override {
 			return zone;
 		}
@@ -83,6 +87,7 @@ namespace agdg {
 				listener->on_entity_despawn(eid);
 		}
 
+		Realm* realm;
 		IZone* zone;
 		int instance_id;
 

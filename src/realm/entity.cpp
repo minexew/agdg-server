@@ -9,7 +9,6 @@ namespace agdg {
 			dom = realm->get_dom()->create_entity_dom(this);
 		}
 
-		virtual int get_eid() override { return eid; }
 		virtual const std::string& get_name() override { return pc->get_name(); }
 
 		virtual EntityDOM* get_dom() override { return dom.get(); }
@@ -25,7 +24,6 @@ namespace agdg {
 		}
 
 	private:
-		int eid = -1;
 		PlayerCharacter* pc;
 
 		glm::vec3 pos, dir;

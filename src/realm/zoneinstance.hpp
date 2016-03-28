@@ -24,7 +24,7 @@ namespace agdg {
 		static unique_ptr<Entity> create_player_entity(Realm* realm, PlayerCharacter* pc);
 		virtual ~Entity() {}
 
-		virtual int get_eid() = 0;
+		int get_eid() { return eid; }
 		virtual const std::string& get_name() = 0;
 
 		virtual EntityDOM* get_dom() = 0;
@@ -34,6 +34,9 @@ namespace agdg {
 
 		virtual void set_eid(int eid) = 0;
 		virtual void set_pos_dir(const glm::vec3& pos, const glm::vec3& dir) = 0;
+
+	protected:
+		int eid = -1;
 	};
 
 	class ZoneInstanceListener {
@@ -47,6 +50,7 @@ namespace agdg {
 	class ZoneInstance {
 	public:
 		static unique_ptr<ZoneInstance> create(Realm* realm, IZone* zone);
+		virtual ~ZoneInstance() {}
 
 		virtual int add_entity(Entity* entity) = 0;
 		virtual void remove_entity(int eid) = 0;
@@ -59,7 +63,9 @@ namespace agdg {
 
 		virtual ZoneInstanceDOM* get_dom() = 0;
 
+		// TODO: devirtualize these?
 		virtual int get_id() = 0;
+		virtual Realm* get_realm() = 0;
 		virtual IZone* get_zone() = 0;
 		virtual void iterate_entities(std::function<void(int eid, Entity* entity)> callback) = 0;
 	};

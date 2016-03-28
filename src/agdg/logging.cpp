@@ -149,6 +149,11 @@ namespace agdg {
 					printf("warning: ");
 					break;
 
+				case LogType::script:
+					s_consoleColors.set_yellow();
+					printf("script:  ");
+					break;
+
 				default:
 					;
 			}

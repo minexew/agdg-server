@@ -10,7 +10,7 @@
 namespace agdg {
 	class V8Context {
 	public:
-		~V8Context() {}
+		virtual ~V8Context() {}
 
 		virtual void run_script(const char* source, const char* origin) = 0;
 		virtual void run_file(const char* path) = 0;
