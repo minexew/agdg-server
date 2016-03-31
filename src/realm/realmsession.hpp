@@ -1,5 +1,6 @@
 #pragma once
 
+#include <realm/entity.hpp>
 #include <realm/realmprotocol.hpp>
 #include <realm/realmserverimpl.hpp>
 #include <tokenmanager.hpp>

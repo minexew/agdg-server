@@ -1,6 +1,9 @@
 #include <scripting/realm_dom.hpp>
 
+#include <realm/entity.hpp>
 #include <realm/realm.hpp>
+#include <realm/zoneinstance.hpp>
+#include <utility/fileutils.hpp>
 #include <v8scripting/bindingutils.hpp>
 
 namespace agdg {
@@ -23,57 +26,12 @@ namespace agdg {
 	};
 
 	enum class ZoneInstanceCB {
-		chat,
-		player_has_entered,
+		will_chat,
+		did_chat,
+		player_did_enter,
 		//zoneinstance_player_will_enter,
 		max,
 	};
-
-	/*class AIEntityImpl : public Entity, public ZoneInstanceListener {
-	public:
-		AIEntityImpl(Realm* realm, v8::Isolate* isolate, v8::Local<v8::Object> ai) : name(name), pos{{0, 0, 0.5f}}, dir{} {
-			this->ai.Reset(isolate, ai);
-
-			on_chat_.Reset(isolate, ai->Get(v8::String::NewFromUtf8(isolate, "onChat")));
-
-			dom = realm->get_dom()->create_entity_dom(this);
-		}
-
-		virtual const std::string& get_name() override { return name; }
-
-		virtual EntityDOM* get_dom() override { return dom.get(); }
-
-		virtual const glm::vec3& get_dir() override { return dir; }
-		virtual const glm::vec3& get_pos() override { return pos; }
-
-		virtual void set_eid(int eid) override { this->eid = eid; }
-
-		virtual void set_pos_dir(const glm::vec3& pos, const glm::vec3& dir) override {
-			this->pos = pos;
-			this->dir = dir;
-		}
-
-		virtual void on_chat(Entity* entity, const std::string& text, bool html) override {
-			auto on_chat__ = v8::Local<v8::Function>::New(isolate, on_chat_);
-			if (on_chat__->IsFunction()) {
-				V8Scope scope(ctx);
-				auto entity_obj = entity
-								  ? v8::Local<v8::Value>(static_cast<EntityDOMImpl*>(entity->get_dom())->get_instance())
-								  : v8::Local<v8::Value>(v8::Null(tpl->isolate));
-				V8Utils::call(on_chat_, entity, text, html);
-			}
-		}
-
-	private:
-		std::string name;
-
-		glm::vec3 pos, dir;
-
-		V8Context* ctx;
-		v8::Persistent<v8::Object> ai;
-		v8::Persistent<v8::Function> on_chat_;
-		unique_ptr<EntityDOM> dom;
-	};*/
 
 	class TestEntityImpl : public Entity {
 	public:
@@ -87,8 +45,6 @@ namespace agdg {
 
 		virtual const glm::vec3& get_dir() override { return dir; }
 		virtual const glm::vec3& get_pos() override { return pos; }
-
-		virtual void set_eid(int eid) override { this->eid = eid; }
 
 		virtual void set_pos_dir(const glm::vec3& pos, const glm::vec3& dir) override {
 			this->pos = pos;
@@ -109,6 +65,16 @@ namespace agdg {
 
 		v8::Local<v8::Object> get_instance() { return tpl->get_instance(weak, entity); }
 
+		static void say(Entity* entity, const v8::FunctionCallbackInfo<v8::Value>& info) {
+			v8::HandleScope handle_scope(info.GetIsolate());	// FIXME: argument checking
+
+			std::string message;
+			V8Utils::from_js_value(info[0], message);
+			bool html = false;
+			V8Utils::from_js_value(info[1], html);
+			entity->say(message, html);
+		}
+
 		V8TypedClassTemplate<Entity>* tpl;
 		Entity* entity;
 		V8WeakRefOwner<Entity> weak;
@@ -120,25 +86,33 @@ namespace agdg {
 
 		static bool bool_and(bool a, bool b) { return a && b; }
 
-		virtual bool on_chat(Entity* entity, const std::string& message) override {
-			if (callable(ZoneInstanceCB::chat)) {
+		virtual bool on_will_chat(Entity* entity, const std::string& message) override {
+			if (callable(ZoneInstanceCB::will_chat)) {
 				V8Scope scope(tpl->ctx);
 				auto entity_obj = entity
 						? v8::Local<v8::Value>(static_cast<EntityDOMImpl*>(entity->get_dom())->get_instance())
 						: v8::Local<v8::Value>(v8::Null(tpl->isolate));
-				return call<bool, bool_and>(ZoneInstanceCB::chat, entity_obj, message);
+				return call_with_return<bool, bool_and>(ZoneInstanceCB::will_chat, entity_obj, message);
 			}
 			else
 				return true;
 		}
 
-		//virtual void on_player_will_enter(Entity* player) override {}
+		virtual void on_did_chat(Entity* entity, const std::string& message) override {
+			if (callable(ZoneInstanceCB::did_chat)) {
+				V8Scope scope(tpl->ctx);
+				auto entity_obj = entity
+								  ? v8::Local<v8::Value>(static_cast<EntityDOMImpl*>(entity->get_dom())->get_instance())
+								  : v8::Local<v8::Value>(v8::Null(tpl->isolate));
+				return call(ZoneInstanceCB::did_chat, entity_obj, message);
+			}
+		}
 
-		virtual void on_player_has_entered(Entity* player) override {
-			if (callable(ZoneInstanceCB::player_has_entered)) {
+		virtual void on_player_did_enter(Entity *player) override {
+			if (callable(ZoneInstanceCB::player_did_enter)) {
 				V8Scope scope(tpl->ctx);
 				auto player_obj = static_cast<EntityDOMImpl*>(player->get_dom())->get_instance();
-				call(ZoneInstanceCB::player_has_entered, player_obj);
+				call(ZoneInstanceCB::player_did_enter, player_obj);
 			}
 		}
 
@@ -185,6 +159,8 @@ namespace agdg {
 			set_property_getter<int, &Entity::get_eid>("eid");
 			set_property_getter<const std::string&, &Entity::get_name>("name");
 			set_property_getter<const glm::vec3&, &Entity::get_pos>("pos");
+
+			set_method<EntityDOMImpl::say>("say");
 		}
 	};
 
@@ -193,13 +169,15 @@ namespace agdg {
 		ZoneInstanceDOMTemplate(V8Context* ctx) : V8ClassTemplateWithCallbacks(ctx) {
 			V8Scope scope(ctx);
 
-			register_callback<ZoneInstanceDOMImpl>(ZoneInstanceCB::chat, "onChat");
-			register_callback<ZoneInstanceDOMImpl>(ZoneInstanceCB::player_has_entered , "onPlayerHasEntered");
+			register_callback<ZoneInstanceDOMImpl>(ZoneInstanceCB::will_chat, "willChat");
+			register_callback<ZoneInstanceDOMImpl>(ZoneInstanceCB::did_chat, "didChat");
+			register_callback<ZoneInstanceDOMImpl>(ZoneInstanceCB::player_did_enter , "playerDidEnter");
 			//register_hook(zoneinstance_player_will_enter, "onPlayerWillEnter");
+
+			set_property_getter<int, &ZoneInstance::get_id>("id");
 
 			set_method<ZoneInstanceDOMImpl::broadcast_chat>("broadcastChat");
 			set_method<ZoneInstanceDOMImpl::spawn_test_entity>("spawnTestEntity");
-			set_property_getter<int, &ZoneInstance::get_id>("id");
 		}
 	};
 
@@ -215,6 +193,8 @@ namespace agdg {
 
 			register_callback<RealmDOMImpl>(RealmCB::realm_init, "onRealmInit");
 			register_callback<RealmDOMImpl>(RealmCB::zone_instance_create, "onZoneInstanceCreate");
+
+			set_method<std::string, RealmDOMImpl::loadFileAsString>("loadFileAsString");
 
 			auto context = ctx->get_v8_context();
 			v8::Local<v8::Object> global = context->Global();
@@ -234,6 +214,13 @@ namespace agdg {
 		}
 
 		virtual void on_zone_instance_create(ZoneInstance* instance) override;
+
+		static std::string loadFileAsString(Realm* realm, const v8::FunctionCallbackInfo<v8::Value>& info) {
+			std::string filename;
+			V8Utils::from_js_value(info[0], filename);
+			// FIXME: exception handling
+			return FileUtils::get_contents(filename);
+		}
 
 		EntityDOMTemplate entity_tpl;
 		ZoneInstanceDOMTemplate zone_instance_tpl;

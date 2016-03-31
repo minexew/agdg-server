@@ -4,40 +4,9 @@
 #include <world/zonemanager.hpp>
 
 namespace agdg {
-	class EntityDOM;
+	class Entity;
 	class Realm;
-	class RealmDOM;
 	class ZoneInstanceDOM;
-
-	class PlayerCharacter {
-	public:
-		PlayerCharacter(const std::string& name) : name(name) {}
-
-		const std::string& get_name() { return name; }
-
-	private:
-		std::string name;
-	};
-
-	class Entity {
-	public:
-		static unique_ptr<Entity> create_player_entity(Realm* realm, PlayerCharacter* pc);
-		virtual ~Entity() {}
-
-		int get_eid() { return eid; }
-		virtual const std::string& get_name() = 0;
-
-		virtual EntityDOM* get_dom() = 0;
-
-		virtual const glm::vec3& get_dir() = 0;
-		virtual const glm::vec3& get_pos() = 0;
-
-		virtual void set_eid(int eid) = 0;
-		virtual void set_pos_dir(const glm::vec3& pos, const glm::vec3& dir) = 0;
-
-	protected:
-		int eid = -1;
-	};
 
 	class ZoneInstanceListener {
 	public:
@@ -63,7 +32,7 @@ namespace agdg {
 
 		virtual ZoneInstanceDOM* get_dom() = 0;
 
-		// TODO: devirtualize these?
+		// TODO: devirtualize getters?
 		virtual int get_id() = 0;
 		virtual Realm* get_realm() = 0;
 		virtual IZone* get_zone() = 0;

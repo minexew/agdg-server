@@ -1,6 +1,7 @@
-#include <realm/realm.hpp>
 #include <realm/zoneinstance.hpp>
 
+#include <realm/entity.hpp>
+#include <realm/realm.hpp>
 #include <scripting/realm_dom.hpp>
 
 #include <algorithm>
@@ -20,14 +21,14 @@ namespace agdg {
 			entity->set_eid(eid);
 			entities[eid] = entity;
 
-			//dom->on_player_will_enter(entity);
-
+			entity->set_zone_instance(this);
 			broadcast_entity_spawn(eid, entity, entity->get_pos(), entity->get_dir());
 
 			return eid;
 		}
 
 		virtual void remove_entity(int eid) override {
+			// FIXME: need to set_zone_instance(nullptr)
 			entities.erase(eid);
 
 			broadcast_entity_despawn(eid);
@@ -42,11 +43,13 @@ namespace agdg {
 		}
 
 		virtual void broadcast_chat(Entity* entity, const std::string& text, bool html) override {
-			if (!dom->on_chat(entity, text))
+			if (!dom->on_will_chat(entity, text))
 				return;
 
 			for (auto listener : listeners)
 				listener->on_chat(entity, text, html);
+
+			dom->on_did_chat(entity, text);
 		}
 
 		virtual void broadcast_entity_update(Entity* entity, const glm::vec3& pos, const glm::vec3& dir, int half_latency) override {

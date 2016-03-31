@@ -64,37 +64,26 @@ void ReportException(v8::Isolate* isolate, v8::TryCatch* try_catch) {
 bool ExecuteString(v8::Isolate* isolate, v8::Local<v8::String> source,
                    v8::Local<v8::Value> name, bool print_result,
                    bool report_exceptions) {
-  v8::HandleScope handle_scope(isolate);
-  v8::TryCatch try_catch(isolate);
-  v8::ScriptOrigin origin(name);
-  v8::Local<v8::Context> context(isolate->GetCurrentContext());
-  v8::Local<v8::Script> script;
+	v8::HandleScope handle_scope(isolate);
+	v8::TryCatch try_catch(isolate);
+	v8::ScriptOrigin origin(name);
+	v8::Local<v8::Context> context(isolate->GetCurrentContext());
+	v8::Local<v8::Script> script;
 
-  if (!v8::Script::Compile(context, source, &origin).ToLocal(&script)) {
-    // Print errors that happened during compilation.
-    if (report_exceptions)
-      ReportException(isolate, &try_catch);
-    return false;
-  }
+	if (!v8::Script::Compile(context, source, &origin).ToLocal(&script)) {
+    	// Print errors that happened during compilation.
+		if (report_exceptions)
+			ReportException(isolate, &try_catch);
+		return false;
+	}
 
 	v8::Local<v8::Value> result;
 	if (!script->Run(context).ToLocal(&result)) {
-	  //assert(try_catch.HasCaught());
-	  // Print errors that happened during execution.
-	  if (report_exceptions)
-	    ReportException(isolate, &try_catch);
-	  return false;
+		if (report_exceptions)
+			ReportException(isolate, &try_catch);
+		return false;
 	}
-
-	//assert(!try_catch.HasCaught());
-	if (print_result && !result->IsUndefined()) {
-		// If all went well and the result wasn't undefined then print
-		// the returned value.
-		v8::String::Utf8Value str(result);
-		const char* cstr = ToCString(str);
-		printf("%s\n", cstr);
-	}
-    return true;
+	return true;
 }
 
 

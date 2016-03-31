@@ -242,7 +242,7 @@ namespace agdg {
 		}
 
 		template<class ReturnValue, ReturnValue(*fold)(ReturnValue, ReturnValue),
-				class... Types> ReturnValue call(CallbackEnum which, Types... args) {
+				class... Types> ReturnValue call_with_return(CallbackEnum which, Types... args) {
 			auto callback = callbacks[static_cast<int>(which)].get();
 
 			if (!callback)

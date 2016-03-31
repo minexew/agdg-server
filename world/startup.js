@@ -71,22 +71,27 @@ class BaseAIEntity {
         this.zoneInstance = zoneInstance;
         this.entity = entity;
 
-        zoneInstance.onChat((entity, text, html) => {
-            if (entity && areClose(this.entity, entity))
-                this.onChat(entity, text, html);
+        zoneInstance.didChat((entity, text, html) => {
+            if (entity && entity != this.entity && areClose(this.entity, entity))
+                this.didChat(entity, text, html);
 
             return true;
         });
 
         //zoneInstance.onEntityDespawn
     }
-
-    onChat(entity, text, html) {
-    }
 }
 class Abalath extends BaseAIEntity {
-    onChat(entity, text, html) {
-        this.zoneInstance.broadcastChat(this.entity, 'I can hear you, ' + entity.name + '!', false);
+    constructor(zoneInstance, entity) {
+        super(zoneInstance, entity);
+
+        this.dialogues = Dialogues.fromFile(entity, 'world/zones/test_zone/abalath');
+    }
+
+    didChat(entity, text, html) {
+        if (!this.dialogues.onChat(entity, text)) {
+            this.zoneInstance.broadcastChat(this.entity, 'I have no reaction to that, ' + entity.name + '...', false);
+        }
     }
 }
 
@@ -100,12 +105,11 @@ realm.onZoneInstanceCreate(instance => {
     entity = instance.spawnTestEntity("Abalath", [4, 4, 0.5]);
     new Abalath(instance, entity);
 
-	instance.onPlayerHasEntered(player => {
-		//print('onPlayerEnter', player)
+	instance.playerDidEnter(player => {
 		//instance.broadcastChat(null, `Hi, <i>${player.name}</i>!`, true)
 	})
 
-    instance.onChat((entity, message, html) => {
+    instance.willChat((entity, message, html) => {
         if (message.indexOf('/exec ') === 0) {
             eval(message.substr(6))
             return false

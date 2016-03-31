@@ -1,5 +1,7 @@
 #include <realm/realmsession.hpp>
+
 #include <agdg/logging.hpp>
+#include <realm/entity.hpp>
 
 namespace agdg {
 	void Ping::arrived() {
@@ -51,7 +53,7 @@ namespace agdg {
 			return;
 
 		g_log->Log("<%s> %s", pc->get_name().c_str(), msg.text.c_str());
-		inst->broadcast_chat(player_entity.get(), msg.text, account_snapshot.trusted);
+		player_entity->say(msg.text, account_snapshot.trusted);
 	}
 
 	void RealmSession::handle(CHello& msg) {
@@ -137,7 +139,7 @@ namespace agdg {
 		inst->broadcast_chat(0, "<strong>" + pc->get_name() + "</strong> joined.", true);
 		inst->subscribe(this);
 
-		inst->get_dom()->on_player_has_entered(player_entity.get());
+		inst->get_dom()->on_player_did_enter(player_entity.get());
 	}
 
 	void RealmSession::handle_command(int code, int cookie, const uint8_t* payload, size_t payload_length) {

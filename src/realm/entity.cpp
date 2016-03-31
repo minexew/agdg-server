@@ -1,3 +1,6 @@
+#include <realm/entity.hpp>
+
+#include <agdg/logging.hpp>
 #include <realm/realm.hpp>
 #include <realm/zoneinstance.hpp>
 #include <scripting/realm_dom.hpp>
@@ -16,8 +19,6 @@ namespace agdg {
 		virtual const glm::vec3& get_dir() override { return dir; }
 		virtual const glm::vec3& get_pos() override { return pos; }
 
-		virtual void set_eid(int eid) override { this->eid = eid; }
-
 		virtual void set_pos_dir(const glm::vec3& pos, const glm::vec3& dir) override {
 			this->pos = pos;
 			this->dir = dir;
@@ -30,6 +31,13 @@ namespace agdg {
 
 		unique_ptr<EntityDOM> dom;
 	};
+
+	void Entity::say(const std::string& message, bool html) {
+		if (zone_instance)
+			zone_instance->broadcast_chat(this, message, html);
+		else
+			g_log->warning("entity '%s' not in instance - tried to say '%s'", get_name().c_str(), message.c_str());
+	}
 
 	unique_ptr<Entity> Entity::create_player_entity(Realm* realm, PlayerCharacter* pc) {
 		return make_unique<EntityImpl>(realm, pc);

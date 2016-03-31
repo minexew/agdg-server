@@ -13,6 +13,8 @@ namespace agdg {
 		//V8Scope scope(v8context.get());
 		dom = RealmDOM::create(v8context.get(), this);
 
+		// TODO: this shouldn't be hardcoded
+		v8context->run_file("scripts/dialogue.js");
 		v8context->run_file("world/startup.js");
 	}
 

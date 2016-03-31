@@ -1,11 +1,13 @@
 #pragma once
 
-#include <realm/zoneinstance.hpp>
 #include <v8scripting/v8scripthandler.hpp>
 
 namespace agdg {
+	class Entity;
 	class Realm;
 	class V8Context;
+	class ZoneInstance;
+
 	typedef V8Context ScriptContext;
 
 	class EntityDOM {
@@ -17,9 +19,10 @@ namespace agdg {
 	public:
 		virtual ~ZoneInstanceDOM() {}
 
-		virtual bool on_chat(Entity* entity, const std::string& message) = 0;
+		virtual bool on_will_chat(Entity* entity, const std::string& message) = 0;
+		virtual void on_did_chat(Entity* entity, const std::string& message) = 0;
 		//virtual void on_player_will_enter(Entity* player) = 0;
-		virtual void on_player_has_entered(Entity* player) = 0;
+		virtual void on_player_did_enter(Entity *player) = 0;
 	};
 
 	class RealmDOM {
