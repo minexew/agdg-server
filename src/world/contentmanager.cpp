@@ -55,7 +55,7 @@ namespace agdg {
 			std::string filename = content_output_dir + "/" + HashUtils::hash_to_hex_string(hash);
 
 			if (!file_exists(filename.c_str())) {
-				g_log->Log("writing %s", filename.c_str());
+				g_log->info("writing %s", filename.c_str());
 				put_file_contents(filename, bytes, length);
 			}
 

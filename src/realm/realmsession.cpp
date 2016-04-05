@@ -52,7 +52,7 @@ namespace agdg {
 		if (!inst || !pc || !player_entity)
 			return;
 
-		g_log->Log("<%s> %s", pc->get_name().c_str(), msg.text.c_str());
+		g_log->info("<%s> %s", pc->get_name().c_str(), msg.text.c_str());
 		player_entity->say(msg.text, account_snapshot.trusted);
 	}
 
@@ -103,7 +103,7 @@ namespace agdg {
 		ping.arrived();
 		client_latency = (int)ping.get_measured_latency().count();
 
-		g_log->Log("%s has a latency of %dms", pc->get_name().c_str(), client_latency);
+		g_log->info("%s has a latency of %dms", pc->get_name().c_str(), client_latency);
 	}
 
 	void RealmSession::handle(CZoneLoaded& msg) {
@@ -212,6 +212,11 @@ namespace agdg {
 			message += payload_length;
 			length -= payload_length;
 		}
+	}
+
+	void RealmSession::on_tick() {
+		if (player_entity)
+			player_entity->on_tick();
 	}
 
 	void RealmSession::set_command_error_flag() {

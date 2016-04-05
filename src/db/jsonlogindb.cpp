@@ -79,14 +79,14 @@ namespace agdg {
 			std::string passwordHash, allowedHostname;
 
 			if (getString(d, "allowedHostname", allowedHostname) && hostname != allowedHostname) {
-				g_log->Log("rejecting user '%s' from '%s' (allowed hostnames: '%s')", username.c_str(), hostname.c_str(), allowedHostname.c_str());
+				g_log->warning("rejecting user '%s' from '%s' (allowed hostnames: '%s')", username.c_str(), hostname.c_str(), allowedHostname.c_str());
 				return false;
 			}
 
 			getString(d, "password_sha3_512", passwordHash);
 
 			if (HashUtils::string_to_sha3_512_hex_string(password) != passwordHash) {
-				g_log->Log("rejecting user '%s' from '%s' (invalid password)", username.c_str(), hostname.c_str());
+				g_log->warning("rejecting user '%s' from '%s' (invalid password)", username.c_str(), hostname.c_str());
 				return false;
 			}
 

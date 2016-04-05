@@ -10,6 +10,7 @@ namespace agdg {
 		virtual ~Realm() {}
 
 		virtual void on_realm_init() = 0;
+		virtual void on_tick() = 0;
 
 		virtual RealmDOM* get_dom() = 0;
 	};

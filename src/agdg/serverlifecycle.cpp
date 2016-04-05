@@ -25,7 +25,7 @@ namespace agdg {
 
 		virtual void start() override {
 			// FIXME: error handling
-			g_log->Log("Starting services");
+			g_log->info("Starting services");
 
 			g_config->enumerate_services([this](const auto& name, const auto& d) {
 				auto service = instantiate_service(name, d);
@@ -35,12 +35,12 @@ namespace agdg {
 				services[name] = std::move(service);
 			});
 
-			g_log->Log("Server is running");
+			g_log->info("Server is running");
 		}
 
 		virtual void close_server(const std::string& message) override {
 			std::lock_guard<std::mutex> lg(services_mutex);
-			g_log->Log("Closing server with reason '%s'", message.c_str());
+			g_log->info("Closing server with reason '%s'", message.c_str());
 
 			for (auto& s : services)
 				s.second->close_server(message);
@@ -59,7 +59,7 @@ namespace agdg {
 
 		virtual void reopen_server() override {
 			std::lock_guard<std::mutex> lg(services_mutex);
-			g_log->Log("Reopening server");
+			g_log->info("Reopening server");
 
 			for (auto& s : services)
 				s.second->reopen_server();
@@ -71,7 +71,7 @@ namespace agdg {
 
 		virtual void stop() override {
 			std::lock_guard<std::mutex> lg(services_mutex);
-			g_log->Log("Stopping services");
+			g_log->info("Stopping services");
 
 			for (auto& s : services)
 				s.second->stop();
@@ -81,7 +81,7 @@ namespace agdg {
 		unique_ptr<IService> instantiate_service(const std::string& name, const rapidjson::Value& d) {
 			std::string class_(d["class"].GetString());
 
-			g_log->Log("Starting service '%s' of class %s", name.c_str(), class_.c_str());
+			g_log->info("Starting service '%s' of class %s", name.c_str(), class_.c_str());
 
 			if (class_ == "ILoginServer")
 				return ILoginServer::create(name, d);

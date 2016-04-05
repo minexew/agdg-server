@@ -58,6 +58,14 @@ namespace agdg {
 			printf("\e[0m");
 		}
 
+		void set_blue() {
+			printf("\e[34m");
+		}
+
+		void set_cyan() {
+			printf("\e[36m");
+		}
+
 		void set_grey() {
 			printf("\e[37m");
 		}
@@ -79,37 +87,37 @@ namespace agdg {
 		std::string message;
 	};
 
-	class Logger : public ILogger {
+	class LoggerImpl : public Logger {
 	public:
-		void error(const char* format, ...) {
+		virtual void error(const char* format, ...) override {
 			va_list args;
 			va_start(args, format);
 			logv(LogType::error, format, args);
 			va_end(args);
 		}
 
-		void warning(const char* format, ...) {
+		virtual void warning(const char* format, ...) override {
 			va_list args;
 			va_start(args, format);
 			logv(LogType::warning, format, args);
 			va_end(args);
 		}
 
-		void script(const char* format, ...) {
-			va_list args;
-			va_start(args, format);
-			logv(LogType::script, format, args);
-			va_end(args);
-		}
-
-		void Log(const char* format, ...) {
+		virtual void info(const char* format, ...) override {
 			va_list args;
 			va_start(args, format);
 			logv(LogType::info, format, args);
 			va_end(args);
 		}
 
-		void get_all_messages(std::function<void(LogTimestamp, const std::string&)> callback) {
+		virtual void script(const char* format, ...) override {
+			va_list args;
+			va_start(args, format);
+			logv(LogType::script, format, args);
+			va_end(args);
+		}
+
+		virtual void get_all_messages(std::function<void(LogTimestamp, const std::string&)> callback) override {
 			std::lock_guard<std::mutex> lock(mutex);
 
 			for (auto entry : logEntries) {
@@ -119,8 +127,6 @@ namespace agdg {
 
 	private:
 		void add_message(LogTimestamp timestamp, const char* message) {
-			std::lock_guard<std::mutex> lock(mutex);
-
 			if (logEntries.size() >= kMaxLogSize)
 				logEntries.pop_front();
 
@@ -128,6 +134,8 @@ namespace agdg {
 		}
 
 		void logv(LogType type, const char* format, va_list args) {
+			std::lock_guard<std::mutex> lock(mutex);
+
 			auto now = steady_clock::now();
 			auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(now - start);
 
@@ -149,8 +157,13 @@ namespace agdg {
 					printf("warning: ");
 					break;
 
+				case LogType::info:
+					s_consoleColors.set_cyan();
+					printf("info:    ");
+					break;
+
 				case LogType::script:
-					s_consoleColors.set_yellow();
+					s_consoleColors.set_blue();
 					printf("script:  ");
 					break;
 
@@ -170,6 +183,6 @@ namespace agdg {
 		std::mutex mutex;
 	};
 
-	static Logger s_log;
-	ILogger* g_log = &s_log;
+	static LoggerImpl s_log;
+	Logger* g_log = &s_log;
 }

@@ -1,10 +1,18 @@
 #include <scripting/realm_dom.hpp>
 
+#include <agdg/logging.hpp>
 #include <realm/entity.hpp>
 #include <realm/realm.hpp>
 #include <realm/zoneinstance.hpp>
 #include <utility/fileutils.hpp>
 #include <v8scripting/bindingutils.hpp>
+
+#define DOM_IMPL_ESSENTIALS(native_type_, native_pointer_member_)\
+	V8TypedClassTemplate<native_type_>* tpl;\
+	native_type_* native_pointer_member_;\
+	V8WeakRefOwner<native_type_> weak;\
+\
+	v8::Local<v8::Object> get_instance() { return tpl->get_instance(weak, native_pointer_member_); }
 
 namespace agdg {
 	// TODO: try to remove <Inst> in register_callback
@@ -21,6 +29,7 @@ namespace agdg {
 
 	enum RealmCB {
 		realm_init,
+		tick,
 		zone_instance_create,
 		max,
 	};
@@ -35,7 +44,8 @@ namespace agdg {
 
 	class TestEntityImpl : public Entity {
 	public:
-		TestEntityImpl(Realm* realm, const std::string& name, const glm::vec3& pos) : name(name), pos(pos), dir{} {
+		TestEntityImpl(Realm* realm, const std::string& name, const glm::vec3& pos)
+				: Entity(false), name(name), pos(pos), dir{} {
 			dom = realm->get_dom()->create_entity_dom(this);
 		}
 
@@ -51,6 +61,9 @@ namespace agdg {
 			this->dir = dir;
 		}
 
+		virtual void on_tick() override {
+		}
+
 	private:
 		std::string name;
 
@@ -62,8 +75,14 @@ namespace agdg {
 	class EntityDOMImpl : public EntityDOM, public V8CallbackCollector<EntityCB> {
 	public:
 		EntityDOMImpl(V8TypedClassTemplate<Entity>* tpl, Entity* entity) : V8CallbackCollector(tpl), tpl(tpl), entity(entity) {}
+		DOM_IMPL_ESSENTIALS(Entity, entity);
 
-		v8::Local<v8::Object> get_instance() { return tpl->get_instance(weak, entity); }
+		static void despawn(Entity* entity, const v8::FunctionCallbackInfo<v8::Value>& info) {
+			v8::HandleScope handle_scope(info.GetIsolate());	// FIXME: argument checking
+
+			// FIXME: make sure this releases memory properly
+			entity->get_zone_instance()->remove_entity(entity->get_eid());
+		}
 
 		static void say(Entity* entity, const v8::FunctionCallbackInfo<v8::Value>& info) {
 			v8::HandleScope handle_scope(info.GetIsolate());	// FIXME: argument checking
@@ -74,15 +93,39 @@ namespace agdg {
 			V8Utils::from_js_value(info[1], html);
 			entity->say(message, html);
 		}
+	};
 
-		V8TypedClassTemplate<Entity>* tpl;
-		Entity* entity;
-		V8WeakRefOwner<Entity> weak;
+	class LoggerDOMImpl {
+	public:
+		LoggerDOMImpl(V8TypedClassTemplate<Logger>* tpl, Logger* log) : tpl(tpl), log(log) {}
+		DOM_IMPL_ESSENTIALS(Logger, log);
+
+		static void error(Logger* log, const v8::FunctionCallbackInfo<v8::Value>& info) {
+			std::string message;
+
+			if (info.Length() > 0 && V8Utils::from_js_value(info[0], message))
+				log->error("%s", message.c_str());
+		}
+
+		static void info(Logger* log, const v8::FunctionCallbackInfo<v8::Value>& info) {
+			std::string message;
+
+			if (info.Length() > 0 && V8Utils::from_js_value(info[0], message))
+				log->info("%s", message.c_str());
+		}
+
+		static void warning(Logger* log, const v8::FunctionCallbackInfo<v8::Value>& info) {
+			std::string message;
+
+			if (info.Length() > 0 && V8Utils::from_js_value(info[0], message))
+				log->warning("%s", message.c_str());
+		}
 	};
 
 	class ZoneInstanceDOMImpl : public ZoneInstanceDOM, public V8CallbackCollector<ZoneInstanceCB> {
 	public:
 		ZoneInstanceDOMImpl(V8TypedClassTemplate<ZoneInstance>* tpl, ZoneInstance* zi) : V8CallbackCollector(tpl), tpl(tpl), zi(zi) {}
+		DOM_IMPL_ESSENTIALS(ZoneInstance, zi);
 
 		static bool bool_and(bool a, bool b) { return a && b; }
 
@@ -143,12 +186,6 @@ namespace agdg {
 			auto entity_obj = static_cast<EntityDOMImpl*>(entity->get_dom())->get_instance();
 			info.GetReturnValue().Set(V8Utils::to_js_value(info.GetIsolate(), entity_obj));
 		}
-
-		v8::Local<v8::Object> get_instance() { return tpl->get_instance(weak, zi); }
-
-		V8TypedClassTemplate<ZoneInstance>* tpl;
-		ZoneInstance* zi;
-		V8WeakRefOwner<ZoneInstance> weak;
 	};
 
 	class EntityDOMTemplate : public V8TypedClassTemplate<Entity> {
@@ -159,7 +196,9 @@ namespace agdg {
 			set_property_getter<int, &Entity::get_eid>("eid");
 			set_property_getter<const std::string&, &Entity::get_name>("name");
 			set_property_getter<const glm::vec3&, &Entity::get_pos>("pos");
+			set_property_getter<bool, &Entity::is_player>("isPlayer");
 
+			set_method<EntityDOMImpl::despawn>("despawn");
 			set_method<EntityDOMImpl::say>("say");
 		}
 	};
@@ -181,17 +220,28 @@ namespace agdg {
 		}
 	};
 
+	class LoggerDOMTemplate : public V8ClassTemplateWithCallbacks<Logger> {
+	public:
+		LoggerDOMTemplate(V8Context* ctx) : V8ClassTemplateWithCallbacks(ctx) {
+			V8Scope scope(ctx);
+
+			set_method<LoggerDOMImpl::warning>("warning");
+		}
+	};
+
 	class RealmDOMImpl : public RealmDOM, public V8ClassTemplateWithCallbacks<Realm>,
 			public V8CallbackCollector<RealmCB> {
 	public:
 		RealmDOMImpl(V8Context* ctx, Realm* realm)
-				: V8ClassTemplateWithCallbacks(ctx),
-				  V8CallbackCollector(this),
+				: V8ClassTemplateWithCallbacks(ctx), V8CallbackCollector(this),
 				entity_tpl(ctx),
-				zone_instance_tpl(ctx) {
+				logger_tpl(ctx),
+				zone_instance_tpl(ctx),
+				g_log(&logger_tpl, agdg::g_log) {
 			V8Scope scope(ctx);
 
 			register_callback<RealmDOMImpl>(RealmCB::realm_init, "onRealmInit");
+			register_callback<RealmDOMImpl>(RealmCB::tick, "onTick");
 			register_callback<RealmDOMImpl>(RealmCB::zone_instance_create, "onZoneInstanceCreate");
 
 			set_method<std::string, RealmDOMImpl::loadFileAsString>("loadFileAsString");
@@ -199,6 +249,8 @@ namespace agdg {
 			auto context = ctx->get_v8_context();
 			v8::Local<v8::Object> global = context->Global();
 			global->Set(v8::String::NewFromUtf8(isolate, "realm"), get_instance(weak, realm));
+
+			global->Set(v8::String::NewFromUtf8(isolate, "g_log"), g_log.get_instance());
 		}
 
 		virtual unique_ptr<EntityDOM> create_entity_dom(Entity* entity) override {
@@ -213,7 +265,17 @@ namespace agdg {
 			call(RealmCB::realm_init);
 		}
 
-		virtual void on_zone_instance_create(ZoneInstance* instance) override;
+		virtual void on_tick() override {
+			call(RealmCB::tick);
+		}
+
+		virtual void on_zone_instance_create(ZoneInstance* instance) override {
+			if (callable(RealmCB::zone_instance_create)) {
+				V8Scope scope(ctx);
+				auto instance_obj = static_cast<ZoneInstanceDOMImpl*>(instance->get_dom())->get_instance();
+				call(RealmCB::zone_instance_create , instance_obj);
+			}
+		}
 
 		static std::string loadFileAsString(Realm* realm, const v8::FunctionCallbackInfo<v8::Value>& info) {
 			std::string filename;
@@ -223,17 +285,13 @@ namespace agdg {
 		}
 
 		EntityDOMTemplate entity_tpl;
+		LoggerDOMTemplate logger_tpl;
 		ZoneInstanceDOMTemplate zone_instance_tpl;
+
+		LoggerDOMImpl g_log;
+
 		V8WeakRefOwner<Realm> weak;
 	};
-
-	void RealmDOMImpl::on_zone_instance_create(ZoneInstance* instance) {
-		if (callable(RealmCB::zone_instance_create)) {
-			V8Scope scope(ctx);
-			auto instance_obj = static_cast<ZoneInstanceDOMImpl*>(instance->get_dom())->get_instance();
-			call(RealmCB::zone_instance_create , instance_obj);
-		}
-	}
 
 	unique_ptr<RealmDOM> RealmDOM::create(ScriptContext* ctx, Realm* realm) {
 		return make_unique<RealmDOMImpl>(ctx, realm);

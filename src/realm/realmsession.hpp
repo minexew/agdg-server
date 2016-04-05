@@ -28,6 +28,7 @@ namespace agdg {
 
 		void close();
 		void on_message(const uint8_t* message, size_t length);
+		void on_tick();
 
 		void handle_command(int code, int cookie, const uint8_t* payload, size_t payload_length);
 

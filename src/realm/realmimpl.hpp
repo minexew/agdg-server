@@ -14,6 +14,7 @@ namespace agdg {
 
 		virtual RealmDOM* get_dom() override { return dom.get(); }
 		virtual void on_realm_init() override { dom->on_realm_init(); }
+		virtual void on_tick() override { dom->on_tick(); }
 
 	private:
 		unique_ptr<RealmDOM> dom;

@@ -1,6 +1,7 @@
 dialogue Greeting_1 default
 	triggeredby
 		- hey
+		- hi
 
 	# (this is a comment)
 	- Hello, stranger.
@@ -10,5 +11,4 @@ dialogue Greeting_1 default
 		> Umm... nothing
 			- That's right. Get lost before I kick your ass.
 		> You heard me
-			- You will pay for this.
-			#event Abalath.Minions
+			startEvent minions

@@ -57,7 +57,7 @@ namespace agdg {
 				auto z = zones.find(zoneName);
 
 				if (z != zones.end())
-					g_log->Log("replacing zone %s on-the-fly", zoneName.c_str());
+					g_log->info("replacing zone %s on-the-fly", zoneName.c_str());
 
 				// FIXME: might throw
 				zones[zoneName] = make_unique<Zone>(content_mgr, path);

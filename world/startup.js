@@ -72,7 +72,7 @@ class BaseAIEntity {
         this.entity = entity;
 
         zoneInstance.didChat((entity, text, html) => {
-            if (entity && entity != this.entity && areClose(this.entity, entity))
+            if (this.didChat && entity && entity != this.entity && areClose(this.entity, entity))
                 this.didChat(entity, text, html);
 
             return true;
@@ -80,28 +80,88 @@ class BaseAIEntity {
 
         //zoneInstance.onEntityDespawn
     }
+
 }
 class Abalath extends BaseAIEntity {
     constructor(zoneInstance, entity) {
         super(zoneInstance, entity);
 
         this.dialogues = Dialogues.fromFile(entity, 'world/zones/test_zone/abalath');
+        this.dialogues.startEvent = (...args) => this.startEvent.apply(this, args);
     }
 
     didChat(entity, text, html) {
+        if (!entity.isPlayer)
+            return;
+
         if (!this.dialogues.onChat(entity, text)) {
-            this.zoneInstance.broadcastChat(this.entity, 'I have no reaction to that, ' + entity.name + '...', false);
+            setTimeout(() => this.entity.say(`I have no reaction to that, ${entity.name}...`), 0.5);
+        }
+    }
+
+    spawnMinion() {
+        var x = this.entity.pos[0] - Math.random() * 5;
+        var y = this.entity.pos[1] - Math.random() * 5;
+
+        var instance = this.zoneInstance;
+        var entity = instance.spawnTestEntity("Abalath's Minion", [x, y, 0.5]);
+        new AbalathMinion(instance, entity);
+        return entity;
+    }
+
+    startEvent(event, entity) {
+        if (this.minions) {
+            this.entity.say(`I'm currently busy with somebody else ${entity.name}, but I'm totally coming for you!`);
+        }
+        else {
+            this.entity.say(`You will pay for this.`);
+            this.minions = [];
+
+            for (var i = 0; i < 3; i++)
+                this.minions.push(this.spawnMinion());
+
+            setTimeout(() => {
+                this.minions.forEach(entity => entity.despawn());
+                this.minions = null;
+
+                this.entity.say(`Well shit.`);
+            }, 7.5);
         }
     }
 }
 
+class AbalathMinion extends BaseAIEntity {
+    constructor(zoneInstance, entity) {
+        super(zoneInstance, entity);
+
+        setTimeout(() => {
+            var messages = ['HUE', 'hue hue', 'gib moni', 'cuck'];
+
+            this.entity.say(messages[Math.floor(Math.random() * messages.length)]);
+        }, Math.random() * 5);
+    }
+}
+
 realm.onRealmInit(() => {
-	print('Scripting engine engaged')
 });
 
-realm.onZoneInstanceCreate(instance => {
-	print('onZoneInstanceCreate', instance.id)
+var timers = [];
 
+realm.onTick(() => {
+    for (var i = 0; i < timers.length; i++) {
+        if (timers[i][1]-- <= 0) {
+            timers[i][0]();
+            timers.splice(i, 1);
+            i--;
+        }
+    }
+});
+
+function setTimeout(func, timeout) {
+    timers.push([func, Math.floor(timeout * 100)]);
+}
+
+realm.onZoneInstanceCreate(instance => {
     entity = instance.spawnTestEntity("Abalath", [4, 4, 0.5]);
     new Abalath(instance, entity);
 

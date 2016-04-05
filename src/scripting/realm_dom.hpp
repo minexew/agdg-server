@@ -34,6 +34,7 @@ namespace agdg {
 		virtual unique_ptr<ZoneInstanceDOM> create_zone_instance_dom(ZoneInstance* zone_instance) = 0;
 
 		virtual void on_realm_init() = 0;
+		virtual void on_tick() = 0;
 		virtual void on_zone_instance_create(ZoneInstance* instance) = 0;
 	};
 }

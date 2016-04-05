@@ -19,6 +19,11 @@ class Dialogues {
 		if (node.message)
 			this.entity.say(node.message, true);
 
+		if (node.startEvents) {
+			for (var event of node.startEvents)
+				this.startEvent(event, entity);
+		}
+
 		if (node.options) {
 			for (var option of node.options)
 				this.entity.say(`<a class="dlg-reply">${option.option}</a>`, true);
@@ -64,6 +69,10 @@ class Dialogues {
 			else
 				return false;
 		}
+	}
+
+	startEvent(event, entity) {
+		g_log.warning(`Dialogues.startEvent('${event}') called (entity '${this.entity.name}'), but not overriden`);
 	}
 }
 
@@ -161,6 +170,11 @@ class DialogueParser {
 				var reply = this.parseNode(indent + 1);
 				reply.option = tokens[1];
 				node.options.push(reply);
+			}
+			else if (tokens[0].toLowerCase() == 'startevent') {
+				node.startEvents = node.startEvents || [];
+
+				node.startEvents.push(tokens[1]);
 			}
 			else if (tokens[0].toLowerCase() == 'triggeredby') {
 				if (node.triggeredBy !== undefined)

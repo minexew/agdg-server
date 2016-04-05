@@ -189,11 +189,11 @@ namespace agdg {
 
 			// Only allow trusted connections
 			if (is_allowed_client_addr(client_addr)) {
-				g_log->Log("ManagementConsole: ACCEPTING connection from %s", client_addr.c_str());
+				g_log->info("ManagementConsole: ACCEPTING connection from %s", client_addr.c_str());
 				return true;
 			}
 
-			g_log->Log("ManagementConsole: REJECTING connection from %s", client_addr.c_str());
+			g_log->warning("ManagementConsole: REJECTING connection from %s", client_addr.c_str());
 			return false;
 		}
 

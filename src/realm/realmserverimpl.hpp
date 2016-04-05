@@ -51,6 +51,8 @@ namespace agdg {
 		void on_message(RealmSession* session, websocketpp::connection_hdl hdl, Server::message_ptr msg);
 		void on_open(websocketpp::connection_hdl hdl);
 
+		void on_tick();
+
 		void run();
 
 		std::thread thread;
@@ -64,6 +66,8 @@ namespace agdg {
 		std::unique_ptr<IZoneManager> zone_mgr;
 
 		std::unique_ptr<ZoneInstance> world_zone;
+
+		std::vector<RealmSession*> all_sessions;
 
 		std::string serverName;
 		int listenPort;

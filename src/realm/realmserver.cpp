@@ -64,6 +64,7 @@ namespace agdg {
 	void RealmServer::on_close(websocketpp::connection_hdl hdl) {
 		connection_ptr con = server.get_con_from_hdl(hdl);
 
+		all_sessions.erase(std::remove(all_sessions.begin(), all_sessions.end(), con->instance.get()));
 		con->instance->close();
 		con->instance.reset();
 	}
@@ -85,8 +86,16 @@ namespace agdg {
 		connection_ptr con = server.get_con_from_hdl(hdl);
 
 		con->instance = make_unique<RealmSession>(realm.get(), this, con);
+		all_sessions.push_back(con->instance.get());
 
 		con->set_message_handler(bind(&RealmServer::on_message, this, con->instance.get(), _1, _2));
+	}
+
+	void RealmServer::on_tick() {
+		realm->on_tick();
+
+		for (auto session : all_sessions)
+			session->on_tick();
 	}
 
 	void RealmServer::run() {
@@ -108,7 +117,26 @@ namespace agdg {
 		server.listen(listenPort);
 		server.start_accept();
 
-		server.run();
+		auto last_update = std::chrono::high_resolution_clock::now();
+		const auto tick_time_ms = 10;
+
+		while (true) {
+			for (size_t count = 0; count < 50; count++)
+				if (server.poll_one() == 0)
+					break;
+
+			// TODO: maybe use something more efficient?
+			auto now = std::chrono::high_resolution_clock::now();
+			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - last_update);
+
+			if (duration.count() >= tick_time_ms) {
+				last_update = now;		// FIXME: should be last_update += tick_time
+
+				this->on_tick();
+			}
+
+			usleep(1000);
+		}
 	}
 
 	void RealmServer::start() {

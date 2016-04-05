@@ -8,7 +8,7 @@
 namespace agdg {
 	class EntityImpl : public Entity {
 	public:
-		EntityImpl(Realm* realm, PlayerCharacter* pc) : pc(pc), pos{{0, 0, 0.5f}}, dir{} {
+		EntityImpl(Realm* realm, PlayerCharacter* pc) : Entity(true), pc(pc), pos{{0, 0, 0.5f}}, dir{} {
 			dom = realm->get_dom()->create_entity_dom(this);
 		}
 
@@ -22,6 +22,9 @@ namespace agdg {
 		virtual void set_pos_dir(const glm::vec3& pos, const glm::vec3& dir) override {
 			this->pos = pos;
 			this->dir = dir;
+		}
+
+		virtual void on_tick() {
 		}
 
 	private:

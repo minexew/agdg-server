@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 project(agdg_server)
 
+set(SANITIZER OFF CACHE BOOL "Enable -fsanitize=address")
 set(STATIC_RUNTIME OFF CACHE BOOL "Link runtime libraries statically")
 set(WITH_V8 ON CACHE BOOL "Build with V8")
 set(V8_INCLUDE "${PROJECT_SOURCE_DIR}/dependencies/v8/include" CACHE PATH "Path to V8 include/")
@@ -30,6 +31,11 @@ target_include_directories(${BINARY} PUBLIC src
     dependencies/reflector/include
     dependencies/websocketpp
 )
+
+if (SANITIZER)
+    target_compile_options(${BINARY} PUBLIC -fsanitize=address)
+    target_link_libraries(${BINARY} -fsanitize=address)
+endif()
 
 if(UNIX)
     if (NOT APPLE)

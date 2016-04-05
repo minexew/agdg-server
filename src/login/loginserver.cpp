@@ -325,7 +325,7 @@ namespace agdg {
 			auto& socket = con->get_raw_socket();
 			auto hostname = socket.remote_endpoint().address().to_string();
 
-			g_log->Log("Logging in user %s from %s (password length %d)", username.c_str(), hostname.c_str(), password.size());
+			g_log->info("Logging in user %s from %s (password length %d)", username.c_str(), hostname.c_str(), password.size());
 
 			// FIXME: this really should be done asynchronously
 			AccountSnapshot account_snapshot;
