@@ -76,6 +76,7 @@ if(UNIX)
                         ${V8_LIB}/obj.target/third_party/icu/libicuuc.a
                         ${V8_LIB}/obj.target/third_party/icu/libicudata.a
                         dl
+                        rt
                         )
             endif()
         endif()

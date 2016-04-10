@@ -2,6 +2,8 @@
 
 #include <agdg/types.hpp>
 
+#include <string>
+
 namespace agdg {
 	class EntityDOM;
 	class Realm;
