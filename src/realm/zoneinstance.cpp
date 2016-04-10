@@ -42,14 +42,17 @@ namespace agdg {
 			listeners.erase(std::remove(listeners.begin(), listeners.end(), listener), listeners.end());
 		}
 
-		virtual void broadcast_chat(Entity* entity, const std::string& text, bool html) override {
-			if (!dom->on_will_chat(entity, text))
+		virtual void broadcast_chat(Entity* entity, const std::string& message, bool html) override {
+			if (!dom->on_will_chat(entity, message))
 				return;
 
-			for (auto listener : listeners)
-				listener->on_chat(entity, text, html);
+			for (auto ent : entities)
+				ent.second->on_entity_did_say(entity, message, html);
 
-			dom->on_did_chat(entity, text);
+			for (auto listener : listeners)
+				listener->on_chat(entity, message, html);
+
+			dom->on_did_chat(entity, message);
 		}
 
 		virtual void broadcast_entity_update(Entity* entity, const glm::vec3& pos, const glm::vec3& dir, int half_latency) override {

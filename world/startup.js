@@ -71,6 +71,7 @@ class BaseAIEntity {
         this.zoneInstance = zoneInstance;
         this.entity = entity;
 
+        // TODO: replace with this.entity.onEntityDidSay
         zoneInstance.didChat((entity, text, html) => {
             if (this.didChat && entity && entity != this.entity && areClose(this.entity, entity))
                 this.didChat(entity, text, html);

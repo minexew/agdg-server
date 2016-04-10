@@ -21,19 +21,50 @@ namespace agdg {
 		milliseconds measured_latency;
 	};
 
+	class PlayerEntityImpl : public Entity {
+	public:
+		PlayerEntityImpl(Realm* realm, PlayerCharacter* pc, RealmSession* session);
+
+		virtual const std::string& get_name() override { return pc->get_name(); }
+
+		virtual EntityDOM* get_dom() override { return dom.get(); }
+
+		virtual const glm::vec3& get_dir() override { return dir; }
+		virtual const glm::vec3& get_pos() override { return pos; }
+
+		virtual void set_pos_dir(const glm::vec3& pos, const glm::vec3& dir) override {
+			this->pos = pos;
+			this->dir = dir;
+		}
+
+		virtual void on_tick() {
+		}
+
+		virtual void on_entity_did_say(Entity* entity, const std::string& message, bool html) override;
+
+	private:
+		PlayerCharacter* pc;
+		RealmSession* session;
+
+		glm::vec3 pos, dir;
+
+		unique_ptr<EntityDOM> dom;
+	};
+
 	class RealmSession : private ZoneInstanceListener {
 	public:
 		RealmSession(Realm* realm, RealmServer* server, connection_ptr con)
 				: realm(realm), server(server), con(con) {}
 
 		void close();
+		void on_entity_did_say(Entity* entity, const std::string& text, bool html);
 		void on_message(const uint8_t* message, size_t length);
 		void on_tick();
 
 		void handle_command(int code, int cookie, const uint8_t* payload, size_t payload_length);
 
 	private:
-		virtual void on_chat(Entity* entity, const std::string& text, bool html) override;
+		virtual void on_chat(Entity* entity, const std::string& text, bool html) override {}
 		virtual void on_entity_despawn(int eid) override;
 		virtual void on_entity_spawn(int eid, Entity* entity, const glm::vec3& pos, const glm::vec3& dir) override;
 		virtual void on_entity_update(Entity* entity, const glm::vec3& pos, const glm::vec3& dir, int half_latency) override;

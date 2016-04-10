@@ -6,7 +6,7 @@
 #include <scripting/realm_dom.hpp>
 
 namespace agdg {
-	class EntityImpl : public Entity {
+	/*class EntityImpl : public Entity {
 	public:
 		EntityImpl(Realm* realm, PlayerCharacter* pc) : Entity(true), pc(pc), pos{{0, 0, 0.5f}}, dir{} {
 			dom = realm->get_dom()->create_entity_dom(this);
@@ -33,7 +33,7 @@ namespace agdg {
 		glm::vec3 pos, dir;
 
 		unique_ptr<EntityDOM> dom;
-	};
+	};*/
 
 	void Entity::say(const std::string& message, bool html) {
 		if (zone_instance)
@@ -42,7 +42,7 @@ namespace agdg {
 			g_log->warning("entity '%s' not in instance - tried to say '%s'", get_name().c_str(), message.c_str());
 	}
 
-	unique_ptr<Entity> Entity::create_player_entity(Realm* realm, PlayerCharacter* pc) {
-		return make_unique<EntityImpl>(realm, pc);
-	}
+	//unique_ptr<Entity> Entity::create_player_entity(Realm* realm, PlayerCharacter* pc) {
+	//	return make_unique<EntityImpl>(realm, pc);
+	//}
 }

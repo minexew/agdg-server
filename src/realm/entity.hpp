@@ -19,7 +19,7 @@ namespace agdg {
 
 	class Entity {
 	public:
-		static unique_ptr<Entity> create_player_entity(Realm* realm, PlayerCharacter* pc);
+		//static unique_ptr<Entity> create_player_entity(Realm* realm, PlayerCharacter* pc);
 
 		Entity(bool is_player_) : is_player_(is_player_) {}
 		virtual ~Entity() {}
@@ -39,6 +39,8 @@ namespace agdg {
 		void set_zone_instance(ZoneInstance* instance) { this->zone_instance = instance; }
 
 		virtual void on_tick() = 0;
+		virtual void on_entity_did_say(Entity* entity, const std::string& message, bool html) {}
+
 		void say(const std::string& message, bool html);
 
 	protected:

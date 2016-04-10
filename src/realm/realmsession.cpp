@@ -1,9 +1,17 @@
 #include <realm/realmsession.hpp>
 
 #include <agdg/logging.hpp>
-#include <realm/entity.hpp>
+#include <realm/realm.hpp>
 
 namespace agdg {
+	PlayerEntityImpl::PlayerEntityImpl(Realm* realm, PlayerCharacter* pc, RealmSession* session) : Entity(true), pc(pc), session(session), pos{{0, 0, 0.5f}}, dir{} {
+		dom = realm->get_dom()->create_entity_dom(this);
+	}
+
+	void PlayerEntityImpl::on_entity_did_say(Entity* entity, const std::string& message, bool html) {
+		session->on_entity_did_say(entity, message, html);
+	}
+
 	void Ping::arrived() {
 		measured_latency = duration_cast<milliseconds>(steady_clock::now() - last_ping);
 		state = State::pinged;
@@ -113,7 +121,8 @@ namespace agdg {
 		SZoneState reply;
 
 		// create player entity
-		player_entity = Entity::create_player_entity(realm, pc.get());
+		//player_entity = Entity::create_player_entity(realm, pc.get());
+		player_entity = make_unique<PlayerEntityImpl>(realm, pc.get(), this);
 
 		inst->iterate_entities([this, &reply](int eid, auto entity) {
 			reply.entities.emplace_back();
@@ -165,8 +174,8 @@ namespace agdg {
 		}
 	}
 
-	void RealmSession::on_chat(Entity* entity, const std::string& text, bool html) {
-		SChatSay msg{ entity ? entity->get_eid() : 0, text, html };
+	void RealmSession::on_entity_did_say(Entity* entity, const std::string& message, bool html) {
+		SChatSay msg{ entity ? entity->get_eid() : 0, message, html };
 		queue(msg);
 	}
 

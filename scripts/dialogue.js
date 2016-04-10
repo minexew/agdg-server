@@ -31,7 +31,7 @@ class Dialogues {
 
 			if (node.options) {
 				for (var option of node.options)
-					this.entity.say(`<a class="dlg-reply">${option.option}</a>`, true);
+					entity.onEntityDidSay(this.entity, `<a class="dlg-reply">${option.option}</a>`, true);
 
 				state.node = node;
 			}

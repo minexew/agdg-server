@@ -84,6 +84,17 @@ namespace agdg {
 			entity->get_zone_instance()->remove_entity(entity->get_eid());
 		}
 
+		static void on_entity_did_say(Entity* entity, const v8::FunctionCallbackInfo<v8::Value>& info) {
+			v8::HandleScope handle_scope(info.GetIsolate());	// FIXME: argument checking
+
+			std::string message;
+			V8Utils::from_js_value(info[1], message);
+			bool html = false;
+			V8Utils::from_js_value(info[2], html);
+			// FIXME: 1st argument
+			entity->on_entity_did_say(nullptr, message, html);
+		}
+
 		static void say(Entity* entity, const v8::FunctionCallbackInfo<v8::Value>& info) {
 			v8::HandleScope handle_scope(info.GetIsolate());	// FIXME: argument checking
 
@@ -199,6 +210,7 @@ namespace agdg {
 			set_property_getter<bool, &Entity::is_player>("isPlayer");
 
 			set_method<EntityDOMImpl::despawn>("despawn");
+			set_method<EntityDOMImpl::on_entity_did_say>("onEntityDidSay");
 			set_method<EntityDOMImpl::say>("say");
 		}
 	};
