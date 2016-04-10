@@ -5,10 +5,7 @@
 namespace agdg {
 	class Entity;
 	class Realm;
-	class V8Context;
 	class ZoneInstance;
-
-	typedef V8Context ScriptContext;
 
 	class EntityDOM {
 	public:

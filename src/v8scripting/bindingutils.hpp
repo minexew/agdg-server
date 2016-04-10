@@ -5,6 +5,7 @@
 #include "libplatform/libplatform.h"
 #include "v8.h"
 
+#include <array>
 #include <string>
 #include <vector>
 
@@ -233,11 +234,11 @@ namespace agdg {
 			v8::Context::Scope context_scope(context);
 
 			v8::Local<v8::Value> global = context->Global();
-			v8::Local<v8::Value> call_args[] = { V8Utils::to_js_value(isolate, args)... };
+			std::array<v8::Local<v8::Value>, sizeof...(args)> call_args { V8Utils::to_js_value(isolate, args)... };
 
 			for (; callback; callback = callback->next.get()) {
 				v8::Local<v8::Function> function = v8::Local<v8::Function>::New(isolate, callback->function);
-				function->Call(global, sizeof...(args), call_args);
+				function->Call(global, call_args.size(), call_args.data());
 			}
 		}
 
@@ -257,14 +258,14 @@ namespace agdg {
 			v8::Context::Scope context_scope(context);
 
 			v8::Local<v8::Value> global = context->Global();
-			v8::Local<v8::Value> call_args[] = { V8Utils::to_js_value(isolate, args)... };
+			std::array<v8::Local<v8::Value>, sizeof...(args)> call_args { V8Utils::to_js_value(isolate, args)... };
 
 			bool first = true;
 			ReturnValue theReturn;
 
 			for (; callback; callback = callback->next.get()) {
 				v8::Local<v8::Function> function = v8::Local<v8::Function>::New(isolate, callback->function);
-				v8::Local<v8::Value> result = function->Call(global, sizeof...(args), call_args);
+				v8::Local<v8::Value> result = function->Call(global, call_args.size(), call_args.data());
 
 				if (first) {
 					V8Utils::from_js_value(result, theReturn);
