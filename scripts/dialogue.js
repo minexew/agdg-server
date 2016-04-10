@@ -16,22 +16,28 @@ class Dialogues {
 	}
 
 	enterNode(state, entity, node) {
-		if (node.message)
-			this.entity.say(node.message, true);
+		state.busy = true;
 
-		if (node.startEvents) {
-			for (var event of node.startEvents)
-				this.startEvent(event, entity);
-		}
+		setTimeout(() => {
+			state.busy = false;
 
-		if (node.options) {
-			for (var option of node.options)
-				this.entity.say(`<a class="dlg-reply">${option.option}</a>`, true);
+			if (node.message)
+				this.entity.say(node.message, true);
 
-			state.node = node;
-		}
-		else
-			state.node = null;
+			if (node.startEvents) {
+				for (var event of node.startEvents)
+					this.startEvent(event, entity);
+			}
+
+			if (node.options) {
+				for (var option of node.options)
+					this.entity.say(`<a class="dlg-reply">${option.option}</a>`, true);
+
+				state.node = node;
+			}
+			else
+				state.node = null;
+		}, 0.5);
 	}
 
 	static fromFile(entity, path) {
@@ -43,6 +49,9 @@ class Dialogues {
 		var state = this.states[entity.eid];
 
 		if (state && state.node) {
+			if (state.busy)
+				return;
+
 			if (state.node.options) {
 				for (var option of state.node.options) {
 					if (text == option.option) {

@@ -114,18 +114,24 @@ class Abalath extends BaseAIEntity {
             this.entity.say(`I'm currently busy with somebody else ${entity.name}, but I'm totally coming for you!`);
         }
         else {
-            this.entity.say(`You will pay for this.`);
+            this.entity.say(`You will pay for this. My minions shall destroy you!`);
             this.minions = [];
 
-            for (var i = 0; i < 3; i++)
-                this.minions.push(this.spawnMinion());
-
             setTimeout(() => {
-                this.minions.forEach(entity => entity.despawn());
-                this.minions = null;
+                this.entity.say(`Rise, minions!`);
 
-                this.entity.say(`Well shit.`);
-            }, 7.5);
+                setTimeout(() => {
+                    for (var i = 0; i < 3; i++)
+                        this.minions.push(this.spawnMinion());
+
+                    setTimeout(() => {
+                        this.minions.forEach(entity => entity.despawn());
+                        this.minions = null;
+
+                        this.entity.say(`Well shit.`);
+                    }, 7.5);
+                }, 1);
+            }, 3);
         }
     }
 }
@@ -135,7 +141,7 @@ class AbalathMinion extends BaseAIEntity {
         super(zoneInstance, entity);
 
         setTimeout(() => {
-            var messages = ['HUE', 'hue hue', 'gib moni', 'cuck'];
+            var messages = ["I'm scared", "Not gonna fight that guy", "I'm running away!", "Pay us more and we can talk", "Fuck you Abalath"];
 
             this.entity.say(messages[Math.floor(Math.random() * messages.length)]);
         }, Math.random() * 5);
