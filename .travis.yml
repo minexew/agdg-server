@@ -30,7 +30,7 @@ before_install:
   - gclient sync
   - make library=static x64.release
   - cd ../..
-script: cmake -DV8_LIB=dependencies/v8/out/x64.release/ -DSTATIC_V8 . && make VERBOSE=1
+script: cmake -DV8_LIB=dependencies/v8/out/x64.release/ -DSTATIC_V8=1 . && make VERBOSE=1
 compiler:
   - clang
   - gcc
