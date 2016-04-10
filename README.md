@@ -18,6 +18,8 @@ git checkout tags/5.1.84
 gclient sync
 ```
 
+On Windows, you'll need to use CMD, not bash. Also don't forget to `set DEPOT_TOOLS_WIN_TOOLCHAIN=0` first.)
+
 Bulding V8
 ==========
 Mac:
@@ -34,4 +36,11 @@ Linux:
 ```
 make -j4 library=shared x64.release
 ```
+Windows:
+```
+python build\gyp_v8 -Dtarget_arch=x64
+
+Then compile the generated project (build/all.sln) in Visual Studio. Optdebug configuration is preferred.
+```
+
 Building V8 in Debug mode is of course possible as well. Do note, however, that a Debug build of V8 will take a few gigabytes on disk.
