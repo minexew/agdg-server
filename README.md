@@ -1,4 +1,4 @@
-![Travis Build](https://travis-ci.org/minexew/agdg-server.svg?branch=master)
+[![Travis Build](https://travis-ci.org/minexew/agdg-server.svg?branch=master)](https://travis-ci.org/minexew/agdg-server)
 
 Fetching V8
 ==========
