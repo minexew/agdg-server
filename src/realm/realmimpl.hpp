@@ -9,7 +9,7 @@
 namespace agdg {
 	class RealmImpl : public Realm {
 	public:
-		RealmImpl() { init_v8(); }
+		RealmImpl();
 		~RealmImpl();
 
 		virtual RealmDOM* get_dom() override { return dom.get(); }
@@ -20,7 +20,6 @@ namespace agdg {
 		unique_ptr<RealmDOM> dom;
 
 #ifdef WITH_V8
-		void init_v8();
 		std::unique_ptr<V8ScriptHandler> v8handler;
 		std::unique_ptr<V8Context> v8context;
 #endif

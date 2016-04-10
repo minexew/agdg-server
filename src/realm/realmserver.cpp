@@ -135,7 +135,8 @@ namespace agdg {
 				this->on_tick();
 			}
 
-			usleep(1000);
+			// TODO: find a better way to wait for next event
+			std::this_thread::sleep_for(std::chrono::microseconds(1000));
 		}
 	}
 

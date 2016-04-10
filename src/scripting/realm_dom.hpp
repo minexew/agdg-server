@@ -1,6 +1,6 @@
 #pragma once
 
-#include <v8scripting/v8scripthandler.hpp>
+#include <agdg/scripthandler.hpp>
 
 namespace agdg {
 	class Entity;

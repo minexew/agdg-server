@@ -32,6 +32,18 @@ namespace agdg {
 			stdout_ = GetStdHandle(STD_OUTPUT_HANDLE);
 		}
 
+		void reset() {
+			SetConsoleTextAttribute(stdout_, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+		}
+
+		void set_blue() {
+			SetConsoleTextAttribute(stdout_, FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+		}
+
+		void set_cyan() {
+			SetConsoleTextAttribute(stdout_, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+		}
+
 		void set_grey() {
 			SetConsoleTextAttribute(stdout_, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
 		}
@@ -42,10 +54,6 @@ namespace agdg {
 
 		void set_yellow() {
 			SetConsoleTextAttribute(stdout_, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
-		}
-
-		void set_white() {
-			SetConsoleTextAttribute(stdout_, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
 		}
 
 	private:
