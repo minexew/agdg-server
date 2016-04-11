@@ -29,6 +29,9 @@ namespace agdg {
 	}
 
 	RealmServer::~RealmServer() {
+		// release everything that might hold script objects (DOMs)
+		world_zone.reset();
+
 		// must go down before the context
 		realm.reset();
 	}
@@ -120,7 +123,9 @@ namespace agdg {
 		auto last_update = std::chrono::high_resolution_clock::now();
 		const auto tick_time_ms = 10;
 
-		while (true) {
+		should_stop = false;
+
+		while (!should_stop) {
 			for (size_t count = 0; count < 50; count++)
 				if (server.poll_one() == 0)
 					break;
@@ -147,7 +152,7 @@ namespace agdg {
 	void RealmServer::stop() {
 		// FIXME: end all connections
 
-		server.stop();
+		should_stop = true;
 
 		thread.join();
 	}

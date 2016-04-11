@@ -57,6 +57,7 @@ namespace agdg {
 
 		std::thread thread;
 		Server server;
+		bool should_stop;
 
 		std::unique_ptr<Realm> realm;
 
