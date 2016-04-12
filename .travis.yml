@@ -26,7 +26,7 @@ before_install:
   - export PATH=`pwd`/depot_tools:"$PATH"
   - fetch v8
   - cd v8
-  - git checkout tags/5.1.298
+  - git checkout tags/5.2.9
   - gclient sync
   - make library=static x64.release
   - cd ../..
