@@ -15,55 +15,55 @@ function convertToText(obj) {
     //    I am checking to see if they have the property
     //    join, which normal objects don't have but
     //    arrays do.
-    if (typeof(obj) == "object" && (obj.join == undefined)) {
+    if (typeof obj === "object" && obj.join === undefined) {
         string.push("{");
         var first = true;
-        for (var prop in obj) {
+        for (let prop in obj) {
             if (!first) string.push(", "); else first = false;
             string.push(prop, ": ", convertToText(obj[prop]));
-        };
+        }
         string.push("}");
 
     //is array
-    } else if (typeof(obj) == "object" && !(obj.join == undefined)) {
-        string.push("[")
-        for(var prop in obj) {
+    } else if (typeof obj === "object" && !(obj.join === undefined)) {
+        string.push("[");
+        for (let prop in obj) {
             string.push(convertToText(obj[prop]), ",");
         }
-        string.push("]")
+        string.push("]");
 
     //is function
-    } else if (typeof(obj) == "function") {
-        string.push(obj.toString())
+    } else if (typeof obj === "function") {
+        string.push(obj.toString());
 
     //all other values can be done with JSON.stringify
     } else {
-        string.push(JSON.stringify(obj))
+        string.push(JSON.stringify(obj));
     }
 
-    return string.join("")
+    return string.join("");
 }
 
 function print(...args) {
-    log_string(args.map(function(value) {
+    log_string(args.map((value) => {
         if (value === undefined)
             return 'undefined';
-        else if (typeof(value) == 'object')
-            return convertToText(value)
+        else if (typeof value === 'object')
+            return convertToText(value);
         else
-            return value.toString()
-    }).join(' '))
+            return value.toString();
+    }).join(' '));
 }
 
-function areClose(a, b) {
-    var a = a.pos;
-    var b = b.pos;
+function areClose(aEntity, bEntity) {
+    const a = aEntity.pos;
+    const b = bEntity.pos;
 
-    var dx = a[0] - b[0];
-    var dy = a[1] - b[1];
-    var dz = a[2] - b[2];
+    const dx = a[0] - b[0];
+    const dy = a[1] - b[1];
+    const dz = a[2] - b[2];
 
-    return (dx * dx + dy * dy + dz * dz < 10 * 10);
+    return dx * dx + dy * dy + dz * dz < 10 * 10;
 }
 
 class BaseAIEntity {
@@ -73,7 +73,7 @@ class BaseAIEntity {
 
         // TODO: replace with this.entity.onEntityDidSay
         zoneInstance.didChat((entity, text, html) => {
-            if (this.didChat && entity && entity != this.entity && areClose(this.entity, entity))
+            if (this.didChat && entity && entity !== this.entity && areClose(this.entity, entity))
                 this.didChat(entity, text, html);
 
             return true;
@@ -172,16 +172,16 @@ realm.onZoneInstanceCreate(instance => {
     entity = instance.spawnTestEntity("Abalath", [4, 4, 0.5]);
     new Abalath(instance, entity);
 
-	instance.playerDidEnter(player => {
-		//instance.broadcastChat(null, `Hi, <i>${player.name}</i>!`, true)
-	})
+    instance.playerDidEnter(player => {
+        //instance.broadcastChat(null, `Hi, <i>${player.name}</i>!`, true)
+    });
 
     instance.willChat((entity, message, html) => {
         if (message.indexOf('/exec ') === 0) {
-            eval(message.substr(6))
-            return false
+            eval(message.substr(6));
+            return false;
         }
 
-        return true
-    })
-})
+        return true;
+    });
+});
