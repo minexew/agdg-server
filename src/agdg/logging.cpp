@@ -97,6 +97,10 @@ namespace agdg {
 
 	class LoggerImpl : public Logger {
 	public:
+		virtual ~LoggerImpl() {
+			s_consoleColors.reset();
+		}
+
 		virtual void error(const char* format, ...) override {
 			va_list args;
 			va_start(args, format);

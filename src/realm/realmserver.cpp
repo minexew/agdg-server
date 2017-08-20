@@ -146,7 +146,7 @@ namespace agdg {
 	}
 
 	void RealmServer::start() {
-		thread = std::thread(&RealmServer::run, this);
+		thread = std::thread(&RealmServer::try_run_catch, this);
 	}
 
 	void RealmServer::stop() {
@@ -155,6 +155,15 @@ namespace agdg {
 		should_stop = true;
 
 		thread.join();
+	}
+
+	void RealmServer::try_run_catch() {
+		try {
+			this->run();
+		}
+		catch (const std::exception& ex) {
+			g_log->error("RealmServer exception: %s", ex.what());
+		}
 	}
 
 	unique_ptr<IRealmServer> IRealmServer::create(const std::string& serviceName, const rapidjson::Value& config) {

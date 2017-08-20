@@ -78,7 +78,7 @@ namespace agdg {
 		V8WeakRef(v8::Isolate* isolate, C* native_instance, v8::Local<v8::Object> instance)
 				: native_instance(native_instance) {
 			v8_instance.Reset(isolate, instance);
-			v8_instance.SetWeak(this, on_gc);
+			v8_instance.SetWeak(this, on_gc, v8::WeakCallbackType::kParameter);
 		}
 
 		void release() {
@@ -86,9 +86,9 @@ namespace agdg {
 			v8_instance.Reset();
 		}
 
-		static void on_gc(const v8::WeakCallbackData<v8::Object, V8WeakRef<C>>& data) {
+		static void on_gc(const v8::WeakCallbackInfo<V8WeakRef<C>>& info) {
 			printf("V8WeakRef on_gc\n");
-			delete data.GetParameter();
+			delete info.GetParameter();
 		}
 
 		C* native_instance;
@@ -128,7 +128,7 @@ namespace agdg {
 		void set_method(const char* name) {
 			auto template_ = v8::Local<v8::ObjectTemplate>::New(isolate, p_template);
 
-			template_->Set(v8::String::NewFromUtf8(isolate, name), v8::Function::New(isolate,
+			template_->Set(v8::String::NewFromUtf8(isolate, name), v8::FunctionTemplate::New(isolate,
 					[](const v8::FunctionCallbackInfo<v8::Value>& info) {
 				auto isolate = info.GetIsolate();
 
@@ -144,7 +144,7 @@ namespace agdg {
 		void set_method(const char* name) {
 			auto template_ = v8::Local<v8::ObjectTemplate>::New(isolate, p_template);
 
-			template_->Set(v8::String::NewFromUtf8(isolate, name), v8::Function::New(isolate,
+			template_->Set(v8::String::NewFromUtf8(isolate, name), v8::FunctionTemplate::New(isolate,
 					[](const v8::FunctionCallbackInfo<v8::Value>& info) {
 				auto ref_external = v8::Local<v8::External>::Cast(info.Holder()->GetInternalField(0));
 				auto ref = static_cast<Ref*>(ref_external->Value());

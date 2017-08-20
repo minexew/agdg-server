@@ -28,7 +28,7 @@ namespace agdg {
 			g_log->info("Starting services");
 
 			g_config->enumerate_services([this](const auto& name, const auto& d) {
-				auto service = instantiate_service(name, d);
+				auto service = this->instantiate_service(name, d);
 				service->init();
 				service->start();
 

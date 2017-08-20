@@ -54,6 +54,7 @@ namespace agdg {
 		void on_tick();
 
 		void run();
+		void try_run_catch();
 
 		std::thread thread;
 		Server server;
