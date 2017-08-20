@@ -11,7 +11,7 @@ namespace agdg {
 	public:
 		RapidJsonConfigManager(const rapidjson::Value& d) : d(d) {}
 
-		virtual bool getValueForKey(reflection::IErrorHandler* err, const char* className, const char* fieldName, const char*& value_out) override {
+		bool getValueForKey(reflection::IErrorHandler* err, const char* className, const char* fieldName, const char*& value_out) override {
 			const auto& it = d.FindMember(fieldName);
 
 			if (it == d.MemberEnd()) {

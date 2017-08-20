@@ -16,7 +16,7 @@ namespace agdg {
 			realm->get_dom()->on_zone_instance_create(this);
 		}
 
-		virtual int add_entity(Entity* entity) override {
+		int add_entity(Entity* entity) override {
 			int eid = next_eid++;
 			entity->set_eid(eid);
 			entities[eid] = entity;
@@ -27,22 +27,22 @@ namespace agdg {
 			return eid;
 		}
 
-		virtual void remove_entity(int eid) override {
+		void remove_entity(int eid) override {
 			// FIXME: need to set_zone_instance(nullptr)
 			entities.erase(eid);
 
 			broadcast_entity_despawn(eid);
 		}
 
-		virtual void subscribe(ZoneInstanceListener* listener) override{
+		void subscribe(ZoneInstanceListener* listener) override{
 			listeners.push_back(listener);
 		}
 
-		virtual void unsubscribe(ZoneInstanceListener* listener) override {
+		void unsubscribe(ZoneInstanceListener* listener) override {
 			listeners.erase(std::remove(listeners.begin(), listeners.end(), listener), listeners.end());
 		}
 
-		virtual void broadcast_chat(Entity* entity, const std::string& message, bool html) override {
+		void broadcast_chat(Entity* entity, const std::string& message, bool html) override {
 			if (!dom->on_will_chat(entity, message))
 				return;
 
@@ -55,28 +55,28 @@ namespace agdg {
 			dom->on_did_chat(entity, message);
 		}
 
-		virtual void broadcast_entity_update(Entity* entity, const glm::vec3& pos, const glm::vec3& dir, int half_latency) override {
+		void broadcast_entity_update(Entity* entity, const glm::vec3& pos, const glm::vec3& dir, int half_latency) override {
 			for (auto listener : listeners)
 				listener->on_entity_update(entity, pos, dir, half_latency);
 		}
 
-		virtual ZoneInstanceDOM* get_dom() override {
+		ZoneInstanceDOM* get_dom() override {
 			return dom.get();
 		}
 
-		virtual int get_id() override {
+		int get_id() override {
 			return instance_id;
 		}
 
-		virtual Realm* get_realm() override {
+		Realm* get_realm() override {
 			return realm;
 		}
 
-		virtual IZone* get_zone() override {
+		IZone* get_zone() override {
 			return zone;
 		}
 
-		virtual void iterate_entities(std::function<void(int eid, Entity* entity)> callback) override {
+		void iterate_entities(std::function<void(int eid, Entity* entity)> callback) override {
 			for (auto kv : entities) {
 				callback(kv.first, kv.second);
 			}

@@ -25,8 +25,7 @@ before_install:
   - cd v8
   - git checkout tags/6.0.286.55
   - gclient sync
-  - gn gen out.gn/x64.release --args='is_debug=false target_cpu="x64" is_component_build=false'
-  - ninja -C out.gn/x64.release
+  - make library=shared x64.release
   - cd ../..
 script: cmake -DSTATIC_V8=0 -DWITH_V8=1 . && make VERBOSE=1
 compiler:

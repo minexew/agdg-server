@@ -97,39 +97,39 @@ namespace agdg {
 
 	class LoggerImpl : public Logger {
 	public:
-		virtual ~LoggerImpl() {
+		~LoggerImpl() override {
 			s_consoleColors.reset();
 		}
 
-		virtual void error(const char* format, ...) override {
+		void error(const char* format, ...) override {
 			va_list args;
 			va_start(args, format);
 			logv(LogType::error, format, args);
 			va_end(args);
 		}
 
-		virtual void warning(const char* format, ...) override {
+		void warning(const char* format, ...) override {
 			va_list args;
 			va_start(args, format);
 			logv(LogType::warning, format, args);
 			va_end(args);
 		}
 
-		virtual void info(const char* format, ...) override {
+		void info(const char* format, ...) override {
 			va_list args;
 			va_start(args, format);
 			logv(LogType::info, format, args);
 			va_end(args);
 		}
 
-		virtual void script(const char* format, ...) override {
+		void script(const char* format, ...) override {
 			va_list args;
 			va_start(args, format);
 			logv(LogType::script, format, args);
 			va_end(args);
 		}
 
-		virtual void get_all_messages(std::function<void(LogTimestamp, const std::string&)> callback) override {
+		void get_all_messages(std::function<void(LogTimestamp, const std::string&)> callback) override {
 			std::lock_guard<std::mutex> lock(mutex);
 
 			for (auto entry : logEntries) {

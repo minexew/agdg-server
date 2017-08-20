@@ -23,7 +23,7 @@ namespace agdg {
 			load_news_unguarded();
 		}
 
-		virtual bool CreateAccount(const std::string& username, const std::string& password) override {
+		bool CreateAccount(const std::string& username, const std::string& password) override {
 			// FIXME: error reporting
 			if (!ValidateUsername(username))
 				return false;
@@ -51,14 +51,14 @@ namespace agdg {
 			return true;
 		}
 
-		virtual void get_news(std::vector<db::NewsEntry>& news_out) override {
+		void get_news(std::vector<db::NewsEntry>& news_out) override {
 			std::lock_guard<std::mutex> lg(news_mutex);
 
 			news_out.resize(news.size());
 			std::reverse_copy(news.begin(), news.end(), news_out.begin());
 		}
 
-		virtual void post_news(std::string&& title_html, std::string&& contents_html) override {
+		void post_news(std::string&& title_html, std::string&& contents_html) override {
 			std::lock_guard<std::mutex> lg(news_mutex);
 
 			news.emplace_back(std::chrono::system_clock::now(), std::move(title_html), std::move(contents_html));
@@ -66,7 +66,7 @@ namespace agdg {
 			save_news_unguarded();
 		}
 
-		virtual bool VerifyCredentials(const std::string& username, const std::string& password, const std::string& hostname,
+		bool VerifyCredentials(const std::string& username, const std::string& password, const std::string& hostname,
 				AccountSnapshot& snapshot_out) override {
 			// FIXME: error reporting
 			if (!ValidateUsername(username))

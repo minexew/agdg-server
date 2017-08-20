@@ -29,8 +29,8 @@ namespace agdg {
 			hash = content_mgr->put(d, false);
 		}
 
-		virtual const std::string& get_name() override { return name; }
-		virtual const SHA3_224& get_hash() override { return hash;  }
+		const std::string& get_name() override { return name; }
+		const SHA3_224& get_hash() override { return hash;  }
 
 	private:
 		void resolve_dependencies(IContentManager* content_mgr, rapidjson::Document& d) {
@@ -66,13 +66,13 @@ namespace agdg {
 	public:
 		ZoneManager(IContentManager* content_mgr) : content_mgr(content_mgr) {}
 
-		virtual IZone* get_zone_by_id(const std::string& id) override {
+		IZone* get_zone_by_id(const std::string& id) override {
 			auto z = zones.find(id);
 
 			return (z != zones.end()) ? z->second.get() : nullptr;
 		}
 
-		virtual void reload_content() override {
+		void reload_content() override {
 			ContentScanner::ScanDirectory("world/zones", [this](auto path, auto filename) {
 				std::string zoneName(filename, strlen(filename) - 5);
 

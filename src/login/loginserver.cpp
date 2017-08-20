@@ -175,7 +175,7 @@ namespace agdg {
 			db = IJsonLoginDB::create("db/" + serviceName + "/");
 		}
 
-		virtual void init() override {
+		void init() override {
 			server.init_asio();
 			server.set_reuse_addr(true);
 
@@ -187,11 +187,11 @@ namespace agdg {
 			server.start_accept();
 		}
 
-		virtual void start() override {
+		void start() override {
 			thread = std::thread(&LoginServer::run, this);
 		}
 
-		virtual void stop() override {
+		void stop() override {
 			// FIXME: end all connections
 
 			server.stop();
@@ -199,18 +199,18 @@ namespace agdg {
 			thread.join();
 		}
 
-		virtual void close_server(const std::string& message) override {
+		void close_server(const std::string& message) override {
 			std::lock_guard<std::mutex> lg(server_closure_message_mutex);
 
 			server_closed = true;
 			server_closure_message = message;
 		}
 
-		virtual void post_news(std::string&& title_html, std::string&& contents_html) override {
+		void post_news(std::string&& title_html, std::string&& contents_html) override {
 			db->post_news(std::move(title_html), std::move(contents_html));
 		}
 
-		virtual void reopen_server() override {
+		void reopen_server() override {
 			server_closed = false;
 		}
 

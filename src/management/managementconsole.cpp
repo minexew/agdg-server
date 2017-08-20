@@ -116,7 +116,7 @@ namespace agdg {
 			}
 		}
 
-		virtual void init() override {
+		void init() override {
 			server.init_asio();
 			server.set_reuse_addr(true);
 
@@ -129,11 +129,11 @@ namespace agdg {
 			server.start_accept();
 		}
 
-		virtual void start() override {
+		void start() override {
 			thread = std::thread(&ManagementConsole::run, this);
 		}
 
-		virtual void stop() override {
+		void stop() override {
 			// FIXME: end all connections
 
 			server.stop();

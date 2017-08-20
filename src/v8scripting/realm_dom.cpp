@@ -49,19 +49,19 @@ namespace agdg {
 			dom = realm->get_dom()->create_entity_dom(this);
 		}
 
-		virtual const std::string& get_name() override { return name; }
+		const std::string& get_name() override { return name; }
 
-		virtual EntityDOM* get_dom() override { return dom.get(); }
+		EntityDOM* get_dom() override { return dom.get(); }
 
-		virtual const glm::vec3& get_dir() override { return dir; }
-		virtual const glm::vec3& get_pos() override { return pos; }
+		const glm::vec3& get_dir() override { return dir; }
+		const glm::vec3& get_pos() override { return pos; }
 
-		virtual void set_pos_dir(const glm::vec3& pos, const glm::vec3& dir) override {
+		void set_pos_dir(const glm::vec3& pos, const glm::vec3& dir) override {
 			this->pos = pos;
 			this->dir = dir;
 		}
 
-		virtual void on_tick() override {
+		void on_tick() override {
 		}
 
 	private:
@@ -140,7 +140,7 @@ namespace agdg {
 
 		static bool bool_and(bool a, bool b) { return a && b; }
 
-		virtual bool on_will_chat(Entity* entity, const std::string& message) override {
+		bool on_will_chat(Entity* entity, const std::string& message) override {
 			if (callable(ZoneInstanceCB::will_chat)) {
 				V8Scope scope(tpl->ctx);
 				auto entity_obj = entity
@@ -152,7 +152,7 @@ namespace agdg {
 				return true;
 		}
 
-		virtual void on_did_chat(Entity* entity, const std::string& message) override {
+		void on_did_chat(Entity* entity, const std::string& message) override {
 			if (callable(ZoneInstanceCB::did_chat)) {
 				V8Scope scope(tpl->ctx);
 				auto entity_obj = entity
@@ -162,7 +162,7 @@ namespace agdg {
 			}
 		}
 
-		virtual void on_player_did_enter(Entity *player) override {
+		void on_player_did_enter(Entity *player) override {
 			if (callable(ZoneInstanceCB::player_did_enter)) {
 				V8Scope scope(tpl->ctx);
 				auto player_obj = static_cast<EntityDOMImpl*>(player->get_dom())->get_instance();
@@ -265,23 +265,23 @@ namespace agdg {
 			global->Set(v8::String::NewFromUtf8(isolate, "g_log"), g_log.get_instance());
 		}
 
-		virtual unique_ptr<EntityDOM> create_entity_dom(Entity* entity) override {
+		unique_ptr<EntityDOM> create_entity_dom(Entity* entity) override {
 			return make_unique<EntityDOMImpl>(&entity_tpl, entity);
 		}
 
-		virtual unique_ptr<ZoneInstanceDOM> create_zone_instance_dom(ZoneInstance* zone_instance) override {
+		unique_ptr<ZoneInstanceDOM> create_zone_instance_dom(ZoneInstance* zone_instance) override {
 			return make_unique<ZoneInstanceDOMImpl>(&zone_instance_tpl, zone_instance);
 		}
 
-		virtual void on_realm_init() override {
+		void on_realm_init() override {
 			call(RealmCB::realm_init);
 		}
 
-		virtual void on_tick() override {
+		void on_tick() override {
 			call(RealmCB::tick);
 		}
 
-		virtual void on_zone_instance_create(ZoneInstance* instance) override {
+		void on_zone_instance_create(ZoneInstance* instance) override {
 			if (callable(RealmCB::zone_instance_create)) {
 				V8Scope scope(ctx);
 				auto instance_obj = static_cast<ZoneInstanceDOMImpl*>(instance->get_dom())->get_instance();

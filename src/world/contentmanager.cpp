@@ -50,7 +50,7 @@ namespace agdg {
 
 		//virtual std::string get_asset_as_string(const std::string& path) override;
 
-		virtual SHA3_224 put(const uint8_t* bytes, size_t length, bool cache) {
+		SHA3_224 put(const uint8_t* bytes, size_t length, bool cache) /*override*/ {
 			SHA3_224 hash;
 			HashUtils::hash_bytes(bytes, length, hash);
 
@@ -64,7 +64,7 @@ namespace agdg {
 			return hash;
 		}
 
-		virtual SHA3_224 put(const rapidjson::Document& document, bool cache) override {
+		SHA3_224 put(const rapidjson::Document& document, bool cache) override {
 			rapidjson::StringBuffer buf;
 			rapidjson::Writer<rapidjson::StringBuffer> wr(buf);
 
@@ -73,7 +73,7 @@ namespace agdg {
 			return put((const uint8_t*) buf.GetString(), buf.GetSize(), cache);
 		}
 
-		virtual SHA3_224 put_asset(const std::string& path) override {
+		SHA3_224 put_asset(const std::string& path) override {
 			// TODO: cache, etc etc etc
 			std::string contents = FileUtils::get_contents(path);
 

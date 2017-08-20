@@ -7,6 +7,8 @@ namespace agdg {
 
 	class Logger {
 	public:
+		virtual ~Logger() {}
+
 		virtual void error(const char* format, ...) = 0;
 		virtual void warning(const char* format, ...) = 0;
 		virtual void info(const char* format, ...) = 0;

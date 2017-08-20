@@ -18,12 +18,12 @@
 namespace agdg {
 	class ServerLifecycle : public IServerLifecycle {
 	public:
-		virtual void run() override {
+		void run() override {
 			while (!shouldStop)
 				std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		}
 
-		virtual void start() override {
+		void start() override {
 			// FIXME: error handling
 			g_log->info("Starting services");
 
@@ -38,7 +38,7 @@ namespace agdg {
 			g_log->info("Server is running");
 		}
 
-		virtual void close_server(const std::string& message) override {
+		void close_server(const std::string& message) override {
 			std::lock_guard<std::mutex> lg(services_mutex);
 			g_log->info("Closing server with reason '%s'", message.c_str());
 
@@ -46,7 +46,7 @@ namespace agdg {
 				s.second->close_server(message);
 		}
 
-		virtual IService* find_service_by_name(const std::string& name) override {
+		IService* find_service_by_name(const std::string& name) override {
 			std::lock_guard<std::mutex> lg(services_mutex);
 
 			auto it = services.find(name);
@@ -57,7 +57,7 @@ namespace agdg {
 				return it->second.get();
 		}
 
-		virtual void reopen_server() override {
+		void reopen_server() override {
 			std::lock_guard<std::mutex> lg(services_mutex);
 			g_log->info("Reopening server");
 
@@ -65,11 +65,11 @@ namespace agdg {
 				s.second->reopen_server();
 		}
 
-		virtual void request_shutdown() override {
+		void request_shutdown() override {
 			shouldStop = true;
 		}
 
-		virtual void stop() override {
+		void stop() override {
 			std::lock_guard<std::mutex> lg(services_mutex);
 			g_log->info("Stopping services");
 

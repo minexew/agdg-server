@@ -34,13 +34,13 @@ namespace agdg {
 		RealmServer(const std::string& serviceName, const rapidjson::Value& d);
 		~RealmServer();
 
-		virtual void init() override;
-		virtual void start() override;
-		virtual void stop() override;
+		void init() override;
+		void start() override;
+		void stop() override;
 
 		// FIXME: implement
-		virtual void close_server(const std::string& message) override {}
-		virtual void reopen_server() override {}
+		void close_server(const std::string& message) override {}
+		void reopen_server() override {}
 
 		//IContentManager* get_content_manager() { return content_mgr.get(); }
 		//IZoneManager* GetZoneManager() { return zoneMgr.get(); }

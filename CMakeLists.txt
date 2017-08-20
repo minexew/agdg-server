@@ -13,7 +13,7 @@ set(BINARY agdgserverd)
 
 set(CMAKE_CXX_STANDARD 14)
 
-file(GLOB_RECURSE sources src/*.cpp src/*.c)
+file(GLOB_RECURSE sources src/*.cpp src/*.hpp src/*.c src/*.h)
 
 if (NOT WITH_V8)
     file(GLOB_RECURSE remove_sources src/v8scripting/*)
@@ -49,6 +49,7 @@ if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
             -Wall
             -Wextra
             -Werror=switch
+            -Wno-unused-local-typedef
             -Wno-unused-parameter
             )
 

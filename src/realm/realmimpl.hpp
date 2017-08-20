@@ -12,9 +12,9 @@ namespace agdg {
 		RealmImpl();
 		~RealmImpl();
 
-		virtual RealmDOM* get_dom() override { return dom.get(); }
-		virtual void on_realm_init() override { dom->on_realm_init(); }
-		virtual void on_tick() override { dom->on_tick(); }
+		RealmDOM* get_dom() override { return dom.get(); }
+		void on_realm_init() override { dom->on_realm_init(); }
+		void on_tick() override { dom->on_tick(); }
 
 	private:
 #ifdef WITH_V8

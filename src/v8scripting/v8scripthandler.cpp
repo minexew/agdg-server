@@ -10,13 +10,13 @@
 
 class ArrayBufferAllocator : public v8::ArrayBuffer::Allocator {
 public:
-	virtual void* Allocate(size_t length) override {
+	void* Allocate(size_t length) override {
 		void* data = AllocateUninitialized(length);
 		return data == NULL ? data : memset(data, 0, length);
 	}
 
-	virtual void* AllocateUninitialized(size_t length) override { return malloc(length); }
-	virtual void Free(void* data, size_t) override { free(data); }
+	void* AllocateUninitialized(size_t length) override { return malloc(length); }
+	void Free(void* data, size_t) override { free(data); }
 };
 
 const char* ToCString(const v8::String::Utf8Value& value) {
@@ -100,18 +100,18 @@ namespace agdg {
 			isolate->Dispose();
 		}
 
-		virtual void run_script(const char* source, const char* origin) override;
+		void run_script(const char* source, const char* origin) override;
 
-		virtual void run_file(const char* path) override {
+		void run_file(const char* path) override {
 			std::string s = FileUtils::get_contents(path);
 			return run_script(s.c_str(), path);
 		}
 
-		virtual v8::Isolate* get_isolate() override {
+		v8::Isolate* get_isolate() override {
 			return isolate;
 		}
 
-		virtual v8::Local<v8::Context> get_v8_context() override {
+		v8::Local<v8::Context> get_v8_context() override {
 			return v8::Local<v8::Context>::New(isolate, p_context);
 		}
 
@@ -128,7 +128,7 @@ namespace agdg {
 		~V8ScriptHandlerImpl();
 
 	private:
-		virtual unique_ptr<V8Context> create_context() override;
+		unique_ptr<V8Context> create_context() override;
 
 		ArrayBufferAllocator allocator;
 

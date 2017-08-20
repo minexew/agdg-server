@@ -17,7 +17,7 @@
 namespace reflection {
 	class DefaultErrorHandler : public IErrorHandler {
 	public:
-		virtual void error(const char* errorCode, const char* description) override {
+		void error(const char* errorCode, const char* description) override {
 			throw std::runtime_error((std::string) errorCode + ": " + description);
 		}
 	};
