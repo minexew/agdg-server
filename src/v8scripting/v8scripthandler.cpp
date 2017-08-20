@@ -136,7 +136,9 @@ namespace agdg {
 	};
 
 	V8ScriptHandlerImpl::V8ScriptHandlerImpl(const char* base_path) {
-		v8::V8::InitializeICUDefaultLocation(base_path);
+		// use for as long as possible, then switch to InitializeICUDefaultLocation
+		v8::V8::InitializeICU(base_path);
+
 		v8::V8::InitializeExternalStartupData(base_path);
 		platform.reset(v8::platform::CreateDefaultPlatform());
 		v8::V8::InitializePlatform(platform.get());

@@ -49,6 +49,7 @@ if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
             -Wall
             -Wextra
             -Werror=switch
+            -Wno-unused-parameter
             )
 
     if (NOT APPLE)

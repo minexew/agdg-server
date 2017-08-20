@@ -43,12 +43,10 @@ namespace agdg {
 					auto& prop = *it;
 
 					if (prop.IsObject()) {                                                  // TODO: json_format_silent_failure
-						const auto& props = d.FindMember("props");
-
 						std::string path;
 						if (getString(prop, "model", path)) {
 							auto hash = content_mgr->put_asset(path);
-							auto& hash_str = HashUtils::hash_to_hex_string(hash);
+							auto hash_str = HashUtils::hash_to_hex_string(hash);
 
 							prop.FindMember("model")->value.SetString(hash_str.c_str(), hash_str.size(), d.GetAllocator());
 							dependencies_json.PushBack(rapidjson::Value(hash_str.c_str(), hash_str.size(), d.GetAllocator()), d.GetAllocator());
