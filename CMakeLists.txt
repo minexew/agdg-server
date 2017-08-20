@@ -84,17 +84,17 @@ if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
             else()
                 if (NOT STATIC_V8)
                     set(V8_LIBS
-                            ${V8_LIB}/obj.target/tools/gyp/libv8.so
-                            ${V8_LIB}/obj.target/tools/gyp/libv8_libplatform.a
+                            ${V8_LIB}/obj.target/libv8.so
+                            ${V8_LIB}/obj.target/libv8_libplatform.a
                             ${V8_LIB}/obj.target/third_party/icu/libicui18n.so
                             ${V8_LIB}/obj.target/third_party/icu/libicuuc.so
                             )
                 else()
                     set(V8_LIBS
-                            ${V8_LIB}/obj.target/tools/gyp/libv8_base.a
-                            ${V8_LIB}/obj.target/tools/gyp/libv8_external_snapshot.a
-                            ${V8_LIB}/obj.target/tools/gyp/libv8_libbase.a
-                            ${V8_LIB}/obj.target/tools/gyp/libv8_libplatform.a
+                            ${V8_LIB}/obj.target/libv8_base.a
+                            ${V8_LIB}/obj.target/libv8_external_snapshot.a
+                            ${V8_LIB}/obj.target/libv8_libbase.a
+                            ${V8_LIB}/obj.target/libv8_libplatform.a
                             ${V8_LIB}/obj.target/third_party/icu/libicui18n.a
                             ${V8_LIB}/obj.target/third_party/icu/libicuuc.a
                             ${V8_LIB}/obj.target/third_party/icu/libicudata.a
