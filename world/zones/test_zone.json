@@ -24,5 +24,16 @@
 			},
 			"pos": [-5, 5, 10]
 		}
-	}
+	},
+
+	"props": [
+		{
+			"model": "world/zones/test_zone/castlewall.obj",
+			"pos": [-5, -5, 0]
+		},
+		{
+			"model": "world/zones/test_zone/castlewall.obj",
+			"pos": [-3, -5, 0]
+		}
+	]
 }

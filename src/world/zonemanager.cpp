@@ -11,6 +11,7 @@
 #include <unordered_map>
 
 namespace agdg {
+	// TODO: this will be moved, of course
 	class Zone : public IZone {
 	public:
 		Zone(IContentManager* content_mgr, const std::string& path) {
@@ -33,7 +34,30 @@ namespace agdg {
 
 	private:
 		void resolve_dependencies(IContentManager* content_mgr, rapidjson::Document& d) {
-			d.AddMember("dependencies", rapidjson::Value(rapidjson::kArrayType), d.GetAllocator());
+			auto dependencies_json = rapidjson::Value(rapidjson::kArrayType);
+
+			const auto& props = d.FindMember("props");
+
+			if (props != d.MemberEnd() && props->value.IsArray()) {                         // TODO: json_format_silent_failure
+				for (auto it = props->value.Begin(); it != props->value.End(); it++) {
+					auto& prop = *it;
+
+					if (prop.IsObject()) {                                                  // TODO: json_format_silent_failure
+						const auto& props = d.FindMember("props");
+
+						std::string path;
+						if (getString(prop, "model", path)) {
+							auto hash = content_mgr->put_asset(path);
+							auto& hash_str = HashUtils::hash_to_hex_string(hash);
+
+							prop.FindMember("model")->value.SetString(hash_str.c_str(), hash_str.size(), d.GetAllocator());
+							dependencies_json.PushBack(rapidjson::Value(hash_str.c_str(), hash_str.size(), d.GetAllocator()), d.GetAllocator());
+						}
+					}
+				}
+			}
+
+			d.AddMember("dependencies", std::move(dependencies_json), d.GetAllocator());
 		}
 
 		std::string name;

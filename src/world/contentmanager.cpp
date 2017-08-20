@@ -1,8 +1,10 @@
 #include <world/contentmanager.hpp>
 
 #include <agdg/config.hpp>
-#include <utility/hashutils.hpp>
 #include <agdg/logging.hpp>
+
+#include <utility/fileutils.hpp>
+#include <utility/hashutils.hpp>
 
 #include <rapidjson/writer.h>
 
@@ -69,6 +71,13 @@ namespace agdg {
 			document.Accept(wr);
 
 			return put((const uint8_t*) buf.GetString(), buf.GetSize(), cache);
+		}
+
+		virtual SHA3_224 put_asset(const std::string& path) override {
+			// TODO: cache, etc etc etc
+			std::string contents = FileUtils::get_contents(path);
+
+			return put(reinterpret_cast<const uint8_t*>(contents.data()), contents.size(), true);
 		}
 
 	protected:

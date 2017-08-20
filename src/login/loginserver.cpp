@@ -162,6 +162,7 @@ namespace agdg {
 		connection_ptr con;
 		LoginProtocol protocol;
 
+		// TODO: std::optional :)
 		int clientVersion = 0;
 	};
 
