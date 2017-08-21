@@ -10,8 +10,6 @@ addons:
       - clang-5.0
       - g++-6
 before_install:
-  - if [ $TRAVIS_OS_NAME == osx ]; then brew update && brew upgrade cmake; fi
-
   - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" = "clang++" ]; then export CC=clang-5.0; fi
   - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" = "clang++" ]; then export CXX=clang++-5.0; fi
 
@@ -25,10 +23,10 @@ before_install:
   - cd v8
   - git checkout tags/6.0.286.55
   - gclient sync
-  - gn gen out.gn/x64.debug --args='is_debug=true target_cpu="x64" is_component_build=true'
-  - ninja -C out.gn/x64.debug
+  - gn gen out.gn/x64.release --args='is_debug=false target_cpu="x64" is_component_build=true'
+  - ninja -C out.gn/x64.release
   - cd ../..
-script: cmake -DSTATIC_V8=0 -DWITH_V8=1 -DSYSTEM_V8=0 -DV8_LIB=`pwd`/dependencies/v8/out.gn/x64.debug . && make VERBOSE=1
+script: cmake -DSTATIC_V8=0 -DWITH_V8=1 -DSYSTEM_V8=0 . && make -j2 VERBOSE=1
 compiler:
   - clang
   - gcc
