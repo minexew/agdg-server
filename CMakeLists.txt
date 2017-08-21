@@ -53,6 +53,9 @@ if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
             -Wno-unused-parameter
             )
 
+    # eh?!??!!?!!
+    set_source_files_properties(src/v8scripting/v8scripthandler.cpp PROPERTIES COMPILE_FLAGS -fno-rtti)
+
     if (NOT APPLE)
         if (STATIC_RUNTIME)
 		    set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++ -s")
@@ -86,10 +89,10 @@ if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
             else()
                 if (NOT STATIC_V8)
                     set(V8_LIBS
-                            ${V8_LIB}/obj/libv8.so
-                            ${V8_LIB}/obj/libv8_libplatform.a
-                            ${V8_LIB}/obj/third_party/icu/libicui18n.so
-                            ${V8_LIB}/obj/third_party/icu/libicuuc.so
+                            ${V8_LIB}/libv8.so
+                            ${V8_LIB}/libv8_libplatform.so
+                            ${V8_LIB}/libicui18n.so
+                            ${V8_LIB}/libicuuc.so
                             )
                 else()
                     set(V8_LIBS
