@@ -1,39 +1,39 @@
 {
-	"name": "Test Zone",
-	"bgColor": [0.4, 0.4, 0.4],
+    "name": "Test Zone",
+    "bgColor": [0.4, 0.4, 0.4],
 
-	"entities": {
-		"floor": {
-			"type": "box",
-			"scale": [10, 10, 0.1]
-		},
+    "entities": {
+        "floor": {
+            "type": "box",
+            "scale": [10, 10, 0.1]
+        },
 
-		"light": {
-			"type": "light",
-			"options": {
-				"type": "spot",
-				"color": [1, 1, 1],
-				"outerConeAngle": 60,
-				"innerConeAngle": 40,
-				"range": 50,
-				"intensity": 1,
-				"castShadows": true,
-				"shadowBias": 0.005,
-				"normalOffsetBias": 0.01,
-				"shadowResolution": 2048
-			},
-			"pos": [-5, 5, 10]
-		}
-	},
+        "light": {
+            "type": "light",
+            "options": {
+                "type": "spot",
+                "color": [1, 1, 1],
+                "outerConeAngle": 60,
+                "innerConeAngle": 40,
+                "range": 50,
+                "intensity": 1,
+                "castShadows": true,
+                "shadowBias": 0.005,
+                "normalOffsetBias": 0.01,
+                "shadowResolution": 2048
+            },
+            "pos": [-5, 5, 10]
+        }
+    },
 
-	"props": [
-		{
-			"model": "world/zones/test_zone/castlewall.obj",
-			"pos": [-5, -5, 0]
-		},
-		{
-			"model": "world/zones/test_zone/castlewall.obj",
-			"pos": [-3, -5, 0]
-		}
-	]
+    "props": [
+        {
+            "model": "world/zones/test_zone/castlewall.obj",
+            "pos": [-5, -5, 0]
+        },
+        {
+            "model": "world/zones/test_zone/castlewall.obj",
+            "pos": [-3, -5, 0]
+        }
+    ]
 }

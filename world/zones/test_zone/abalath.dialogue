@@ -1,14 +1,14 @@
 dialogue Greeting_1 default
-	triggeredby
-		- hey
-		- hi
+    triggeredby
+        - hey
+        - hi
 
-	# (this is a comment)
-	- Hello, stranger.
-	> Hi
-	> I will destroy you
-		- What was that?
-		> Umm... nothing
-			- That's right. Get lost before I kick your ass.
-		> You heard me
-			startEvent minions
+    # (this is a comment)
+    - Hello, stranger.
+    > Hi
+    > I will destroy you
+        - What was that?
+        > Umm... nothing
+            - That's right. Get lost before I kick your ass.
+        > You heard me
+            startEvent minions

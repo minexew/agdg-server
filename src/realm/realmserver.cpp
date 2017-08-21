@@ -15,158 +15,158 @@
 // Maybe use fixed-size buffers in some cases
 
 namespace agdg {
-	using websocketpp::lib::placeholders::_1;
-	using websocketpp::lib::placeholders::_2;
+    using websocketpp::lib::placeholders::_1;
+    using websocketpp::lib::placeholders::_2;
 
-	RealmServer::RealmServer(const std::string& serviceName, const rapidjson::Value& d) {
-		configure(*this, d);
+    RealmServer::RealmServer(const std::string& serviceName, const rapidjson::Value& d) {
+        configure(*this, d);
 
-		content_mgr = IContentManager::create();
-		zone_mgr = IZoneManager::create(content_mgr.get());
-		zone_mgr->reload_content();
+        content_mgr = IContentManager::create();
+        zone_mgr = IZoneManager::create(content_mgr.get());
+        zone_mgr->reload_content();
 
-		//db.reset(IJsonRealmDB::Create("db/" + serviceName + "/"));
-	}
+        //db.reset(IJsonRealmDB::Create("db/" + serviceName + "/"));
+    }
 
-	RealmServer::~RealmServer() {
-		// release everything that might hold script objects (DOMs)
-		world_zone.reset();
+    RealmServer::~RealmServer() {
+        // release everything that might hold script objects (DOMs)
+        world_zone.reset();
 
-		// must go down before the context
-		realm.reset();
-	}
+        // must go down before the context
+        realm.reset();
+    }
 
-	void RealmServer::init() {
-		/*
+    void RealmServer::init() {
+        /*
 #ifdef WITH_V8
-		init_v8();
+        init_v8();
 #endif
 
-		server.init_asio();
-		server.set_reuse_addr(true);
+        server.init_asio();
+        server.set_reuse_addr(true);
 
-		server.clear_access_channels(websocketpp::log::alevel::all);
+        server.clear_access_channels(websocketpp::log::alevel::all);
 
-		server.set_open_handler(bind(&RealmServer::on_open, this, _1));
-		server.set_close_handler(bind(&RealmServer::on_close, this, _1));
+        server.set_open_handler(bind(&RealmServer::on_open, this, _1));
+        server.set_close_handler(bind(&RealmServer::on_close, this, _1));
 
-		hooks->on_realm_init();
+        hooks->on_realm_init();
 
-		IZone* test_zone = zone_mgr->get_zone_by_id("test_zone");
-		world_zone = ZoneInstance::create(hooks.get(), test_zone);
+        IZone* test_zone = zone_mgr->get_zone_by_id("test_zone");
+        world_zone = ZoneInstance::create(hooks.get(), test_zone);
 
-		server.listen(listenPort);
-		server.start_accept();
-		*/
-	}
+        server.listen(listenPort);
+        server.start_accept();
+        */
+    }
 
 #ifdef WITH_V8
-	
+    
 #endif
 
-	void RealmServer::on_close(websocketpp::connection_hdl hdl) {
-		connection_ptr con = server.get_con_from_hdl(hdl);
+    void RealmServer::on_close(websocketpp::connection_hdl hdl) {
+        connection_ptr con = server.get_con_from_hdl(hdl);
 
-		all_sessions.erase(std::remove(all_sessions.begin(), all_sessions.end(), con->instance.get()));
-		con->instance->close();
-		con->instance.reset();
-	}
+        all_sessions.erase(std::remove(all_sessions.begin(), all_sessions.end(), con->instance.get()));
+        con->instance->close();
+        con->instance.reset();
+    }
 
-	void RealmServer::on_message(RealmSession* session, websocketpp::connection_hdl hdl, Server::message_ptr msg) {
-		auto data = (const uint8_t*) msg->get_payload().c_str();
-		size_t length = msg->get_payload().size();
+    void RealmServer::on_message(RealmSession* session, websocketpp::connection_hdl hdl, Server::message_ptr msg) {
+        auto data = (const uint8_t*) msg->get_payload().c_str();
+        size_t length = msg->get_payload().size();
 
-		try {
-			// do not parse the commands here, RealmSession will take care of it
-			session->on_message(data, length);
-		}
-		catch (const std::exception& ex) {
-			g_log->error("RealmServer on_message exception: %s", ex.what());
-		}
-	}
+        try {
+            // do not parse the commands here, RealmSession will take care of it
+            session->on_message(data, length);
+        }
+        catch (const std::exception& ex) {
+            g_log->error("RealmServer on_message exception: %s", ex.what());
+        }
+    }
 
-	void RealmServer::on_open(websocketpp::connection_hdl hdl) {
-		connection_ptr con = server.get_con_from_hdl(hdl);
+    void RealmServer::on_open(websocketpp::connection_hdl hdl) {
+        connection_ptr con = server.get_con_from_hdl(hdl);
 
-		con->instance = make_unique<RealmSession>(realm.get(), this, con);
-		all_sessions.push_back(con->instance.get());
+        con->instance = make_unique<RealmSession>(realm.get(), this, con);
+        all_sessions.push_back(con->instance.get());
 
-		con->set_message_handler(bind(&RealmServer::on_message, this, con->instance.get(), _1, _2));
-	}
+        con->set_message_handler(bind(&RealmServer::on_message, this, con->instance.get(), _1, _2));
+    }
 
-	void RealmServer::on_tick() {
-		realm->on_tick();
+    void RealmServer::on_tick() {
+        realm->on_tick();
 
-		for (auto session : all_sessions)
-			session->on_tick();
-	}
+        for (auto session : all_sessions)
+            session->on_tick();
+    }
 
-	void RealmServer::run() {
-		realm = Realm::create();
+    void RealmServer::run() {
+        realm = Realm::create();
 
-		server.init_asio();
-		server.set_reuse_addr(true);
+        server.init_asio();
+        server.set_reuse_addr(true);
 
-		server.clear_access_channels(websocketpp::log::alevel::all);
+        server.clear_access_channels(websocketpp::log::alevel::all);
 
-		server.set_open_handler(bind(&RealmServer::on_open, this, _1));
-		server.set_close_handler(bind(&RealmServer::on_close, this, _1));
+        server.set_open_handler(bind(&RealmServer::on_open, this, _1));
+        server.set_close_handler(bind(&RealmServer::on_close, this, _1));
 
-		realm->on_realm_init();
+        realm->on_realm_init();
 
-		IZone* test_zone = zone_mgr->get_zone_by_id("test_zone");
-		world_zone = ZoneInstance::create(realm.get(), test_zone);
+        IZone* test_zone = zone_mgr->get_zone_by_id("test_zone");
+        world_zone = ZoneInstance::create(realm.get(), test_zone);
 
-		server.listen(listenPort);
-		server.start_accept();
+        server.listen(listenPort);
+        server.start_accept();
 
-		auto last_update = std::chrono::high_resolution_clock::now();
-		const auto tick_time_ms = 10;
+        auto last_update = std::chrono::high_resolution_clock::now();
+        const auto tick_time_ms = 10;
 
-		should_stop = false;
+        should_stop = false;
 
-		while (!should_stop) {
-			for (size_t count = 0; count < 50; count++)
-				if (server.poll_one() == 0)
-					break;
+        while (!should_stop) {
+            for (size_t count = 0; count < 50; count++)
+                if (server.poll_one() == 0)
+                    break;
 
-			// TODO: maybe use something more efficient?
-			auto now = std::chrono::high_resolution_clock::now();
-			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - last_update);
+            // TODO: maybe use something more efficient?
+            auto now = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - last_update);
 
-			if (duration.count() >= tick_time_ms) {
-				last_update = now;		// FIXME: should be last_update += tick_time
+            if (duration.count() >= tick_time_ms) {
+                last_update = now;      // FIXME: should be last_update += tick_time
 
-				this->on_tick();
-			}
+                this->on_tick();
+            }
 
-			// TODO: find a better way to wait for next event
-			std::this_thread::sleep_for(std::chrono::microseconds(1000));
-		}
-	}
+            // TODO: find a better way to wait for next event
+            std::this_thread::sleep_for(std::chrono::microseconds(1000));
+        }
+    }
 
-	void RealmServer::start() {
-		thread = std::thread(&RealmServer::try_run_catch, this);
-	}
+    void RealmServer::start() {
+        thread = std::thread(&RealmServer::try_run_catch, this);
+    }
 
-	void RealmServer::stop() {
-		// FIXME: end all connections
+    void RealmServer::stop() {
+        // FIXME: end all connections
 
-		should_stop = true;
+        should_stop = true;
 
-		thread.join();
-	}
+        thread.join();
+    }
 
-	void RealmServer::try_run_catch() {
-		try {
-			this->run();
-		}
-		catch (const std::exception& ex) {
-			g_log->error("RealmServer exception: %s", ex.what());
-		}
-	}
+    void RealmServer::try_run_catch() {
+        try {
+            this->run();
+        }
+        catch (const std::exception& ex) {
+            g_log->error("RealmServer exception: %s", ex.what());
+        }
+    }
 
-	unique_ptr<IRealmServer> IRealmServer::create(const std::string& serviceName, const rapidjson::Value& config) {
-		return make_unique<RealmServer>(serviceName, config);
-	}
+    unique_ptr<IRealmServer> IRealmServer::create(const std::string& serviceName, const rapidjson::Value& config) {
+        return make_unique<RealmServer>(serviceName, config);
+    }
 }

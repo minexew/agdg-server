@@ -6,83 +6,83 @@ CLIENT -> SERVER
 
 01 Client Hello
 
-	hash token
+    hash token
 
-	Reply: Server Hello
+    Reply: Server Hello
 
 02 Enter World
 
-	string characterName
+    string characterName
 
-	Reply: Load Zone
+    Reply: Load Zone
 
 03 Zone Loaded
 
-	Reply: Zone Intro
+    Reply: Zone Intro
 
 04 Player Movement
 
-	vec3 pos
-	vec3 dir
+    vec3 pos
+    vec3 dir
 
 05 Pong
 
 30 Chat Say
 
-	string text
+    string text
 
 SERVER -> CLIENT
 ================
 
 01 Server Hello
 
-	uint32 numCharacters
+    uint32 numCharacters
 
-	times numCharacters:
-		string characterName
+    times numCharacters:
+        string characterName
 
 02 Load Zone
 
-	string zoneName
-	hash zoneRef
-	vec3 playerPos
-	vec3 playerDir
+    string zoneName
+    hash zoneRef
+    vec3 playerPos
+    vec3 playerDir
 
 03 Zone State
 
-	uint32 numEntities
+    uint32 numEntities
 
-	times numEntities:
-		uint32 eid
-		uint32 flags
-		string name
-		vec3 pos
-		vec3 dir
+    times numEntities:
+        uint32 eid
+        uint32 flags
+        string name
+        vec3 pos
+        vec3 dir
 
 04 Ping
 
 20 Entity Spawn
 
-	int32 eid
-	uint32 flags
-	string name
-	vec3 pos
-	vec3 dir
+    int32 eid
+    uint32 flags
+    string name
+    vec3 pos
+    vec3 dir
 
 21 Entity Despawn
 
-	int32 eid
+    int32 eid
 
 22 Entity Update
 
-	int32 eid
-	vec3 pos
-	vec3 dir
-	uint32 latency		-- estimated latency in ms
-						   e.g. a value of 50 means the movement started about 50ms ago
-						   (currently not used for anything)
+    int32 eid
+    vec3 pos
+    vec3 dir
+    uint32 latency      -- estimated latency in ms
+                           e.g. a value of 50 means the movement started about 50ms ago
+                           (currently not used for anything)
 
 30 Chat Say
 
-	int32 eid
-	string text
+    int32 eid
+    string text

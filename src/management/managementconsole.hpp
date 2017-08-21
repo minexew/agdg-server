@@ -6,8 +6,8 @@
 #include <rapidjson/document.h>
 
 namespace agdg {
-	class IManagementConsole : public IService {
-	public:
-		static unique_ptr<IManagementConsole> create(const std::string& serviceName, const rapidjson::Value& config);
-	};
+    class IManagementConsole : public IService {
+    public:
+        static unique_ptr<IManagementConsole> create(const std::string& serviceName, const rapidjson::Value& config);
+    };
 }

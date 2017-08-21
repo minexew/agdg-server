@@ -9,103 +9,103 @@
 #include <vector>
 
 namespace agdg {
-	class ZoneInstanceImpl : public ZoneInstance {
-	public:
-		ZoneInstanceImpl(Realm* realm, IZone* zone) : realm(realm), zone(zone), instance_id(1001) {
-			dom = realm->get_dom()->create_zone_instance_dom(this);
-			realm->get_dom()->on_zone_instance_create(this);
-		}
+    class ZoneInstanceImpl : public ZoneInstance {
+    public:
+        ZoneInstanceImpl(Realm* realm, IZone* zone) : realm(realm), zone(zone), instance_id(1001) {
+            dom = realm->get_dom()->create_zone_instance_dom(this);
+            realm->get_dom()->on_zone_instance_create(this);
+        }
 
-		int add_entity(Entity* entity) override {
-			int eid = next_eid++;
-			entity->set_eid(eid);
-			entities[eid] = entity;
+        int add_entity(Entity* entity) override {
+            int eid = next_eid++;
+            entity->set_eid(eid);
+            entities[eid] = entity;
 
-			entity->set_zone_instance(this);
-			broadcast_entity_spawn(eid, entity, entity->get_pos(), entity->get_dir());
+            entity->set_zone_instance(this);
+            broadcast_entity_spawn(eid, entity, entity->get_pos(), entity->get_dir());
 
-			return eid;
-		}
+            return eid;
+        }
 
-		void remove_entity(int eid) override {
-			// FIXME: need to set_zone_instance(nullptr)
-			entities.erase(eid);
+        void remove_entity(int eid) override {
+            // FIXME: need to set_zone_instance(nullptr)
+            entities.erase(eid);
 
-			broadcast_entity_despawn(eid);
-		}
+            broadcast_entity_despawn(eid);
+        }
 
-		void subscribe(ZoneInstanceListener* listener) override{
-			listeners.push_back(listener);
-		}
+        void subscribe(ZoneInstanceListener* listener) override{
+            listeners.push_back(listener);
+        }
 
-		void unsubscribe(ZoneInstanceListener* listener) override {
-			listeners.erase(std::remove(listeners.begin(), listeners.end(), listener), listeners.end());
-		}
+        void unsubscribe(ZoneInstanceListener* listener) override {
+            listeners.erase(std::remove(listeners.begin(), listeners.end(), listener), listeners.end());
+        }
 
-		void broadcast_chat(Entity* entity, const std::string& message, bool html) override {
-			if (!dom->on_will_chat(entity, message))
-				return;
+        void broadcast_chat(Entity* entity, const std::string& message, bool html) override {
+            if (!dom->on_will_chat(entity, message))
+                return;
 
-			for (auto ent : entities)
-				ent.second->on_entity_did_say(entity, message, html);
+            for (auto ent : entities)
+                ent.second->on_entity_did_say(entity, message, html);
 
-			for (auto listener : listeners)
-				listener->on_chat(entity, message, html);
+            for (auto listener : listeners)
+                listener->on_chat(entity, message, html);
 
-			dom->on_did_chat(entity, message);
-		}
+            dom->on_did_chat(entity, message);
+        }
 
-		void broadcast_entity_update(Entity* entity, const glm::vec3& pos, const glm::vec3& dir, int half_latency) override {
-			for (auto listener : listeners)
-				listener->on_entity_update(entity, pos, dir, half_latency);
-		}
+        void broadcast_entity_update(Entity* entity, const glm::vec3& pos, const glm::vec3& dir, int half_latency) override {
+            for (auto listener : listeners)
+                listener->on_entity_update(entity, pos, dir, half_latency);
+        }
 
-		ZoneInstanceDOM* get_dom() override {
-			return dom.get();
-		}
+        ZoneInstanceDOM* get_dom() override {
+            return dom.get();
+        }
 
-		int get_id() override {
-			return instance_id;
-		}
+        int get_id() override {
+            return instance_id;
+        }
 
-		Realm* get_realm() override {
-			return realm;
-		}
+        Realm* get_realm() override {
+            return realm;
+        }
 
-		IZone* get_zone() override {
-			return zone;
-		}
+        IZone* get_zone() override {
+            return zone;
+        }
 
-		void iterate_entities(std::function<void(int eid, Entity* entity)> callback) override {
-			for (auto kv : entities) {
-				callback(kv.first, kv.second);
-			}
-		}
+        void iterate_entities(std::function<void(int eid, Entity* entity)> callback) override {
+            for (auto kv : entities) {
+                callback(kv.first, kv.second);
+            }
+        }
 
-	private:
-		void broadcast_entity_spawn(int eid, Entity* entity, const glm::vec3& pos, const glm::vec3& dir) {
-			for (auto listener : listeners)
-				listener->on_entity_spawn(eid, entity, pos, dir);
-		}
+    private:
+        void broadcast_entity_spawn(int eid, Entity* entity, const glm::vec3& pos, const glm::vec3& dir) {
+            for (auto listener : listeners)
+                listener->on_entity_spawn(eid, entity, pos, dir);
+        }
 
-		void broadcast_entity_despawn(int eid) {
-			for (auto listener : listeners)
-				listener->on_entity_despawn(eid);
-		}
+        void broadcast_entity_despawn(int eid) {
+            for (auto listener : listeners)
+                listener->on_entity_despawn(eid);
+        }
 
-		Realm* realm;
-		IZone* zone;
-		int instance_id;
+        Realm* realm;
+        IZone* zone;
+        int instance_id;
 
-		std::unordered_map<int, Entity*> entities;
-		std::vector<ZoneInstanceListener*> listeners;
+        std::unordered_map<int, Entity*> entities;
+        std::vector<ZoneInstanceListener*> listeners;
 
-		unique_ptr<ZoneInstanceDOM> dom;
+        unique_ptr<ZoneInstanceDOM> dom;
 
-		int next_eid = 1;
-	};
+        int next_eid = 1;
+    };
 
-	unique_ptr<ZoneInstance> ZoneInstance::create(Realm* realm, IZone* zone) {
-		return make_unique<ZoneInstanceImpl>(realm, zone);
-	}
+    unique_ptr<ZoneInstance> ZoneInstance::create(Realm* realm, IZone* zone) {
+        return make_unique<ZoneInstanceImpl>(realm, zone);
+    }
 }

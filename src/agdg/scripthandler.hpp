@@ -4,12 +4,12 @@
 
 namespace agdg {
 #ifdef WITH_V8
-	class V8Context;
-	typedef V8Context ScriptContext;
+    class V8Context;
+    typedef V8Context ScriptContext;
 #endif
 
-	class ScriptHandler {
-	public:
-		virtual ~ScriptHandler() {}
-	};
+    class ScriptHandler {
+    public:
+        virtual ~ScriptHandler() {}
+    };
 }
