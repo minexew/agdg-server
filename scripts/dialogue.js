@@ -128,7 +128,7 @@ class DialogueParser {
             // determine indent
             for (var i = 0; i < line.length; i++) {
                 if (line[i] == '\t')
-                    throw 'tab found in indentation - use multiple of 4 spaces!';
+                    throw 'tab found in indentation - use multiple of 4 spaces';
 
                 if (line[i] != ' ')
                     break;
@@ -139,10 +139,15 @@ class DialogueParser {
                 continue;
             }
 
-            if (i < expectedIndent)
+            if (i % 4 != 0)
+                throw 'invalid indentation - use multiple of 4 spaces';
+
+            const indent = i / 4;
+
+            if (indent < expectedIndent)
                 return null;
-            //else if (i > expectedIndent)
-            //    throw 'unexpected indent ' + i + ' - expected ' + expectedIndent + ' or less';
+            else if (indent > expectedIndent)
+                throw 'unexpected indent ' + i + ' - expected ' + expectedIndent + ' or less';
 
             if (line[i] == '-' || line[i] == '>') {
                 this.lastLineNo = this.lineNo++;
