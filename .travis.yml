@@ -25,13 +25,18 @@ before_install:
   - cd v8
   - git checkout tags/6.0.286.55
   - gclient sync
-  - gn gen out.gn/x64.release --args='is_debug=false target_cpu="x64" is_component_build=true'
-  - ninja -C out.gn/x64.release
+  - gn gen out.gn/x64.debug --args='is_debug=true target_cpu="x64" is_component_build=true'
+  - ninja -C out.gn/x64.debug
   - cd ../..
-script: cmake -DSTATIC_V8=0 -DWITH_V8=1 . && make VERBOSE=1
+script: cmake -DSTATIC_V8=0 -DWITH_V8=1 -DSYSTEM_V8=0 -DV8_LIB=`pwd`/dependencies/v8/out.gn/x64.debug . && make VERBOSE=1
 compiler:
   - clang
   - gcc
 os:
   - linux
   - osx
+
+# OS X build on travis takes too long and will probably fail because of that
+matrix:
+  allow_failures:
+    - os: osx
