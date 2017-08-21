@@ -63,27 +63,27 @@ namespace agdg {
 	class ConsoleColors {
 	public:
 		void reset() {
-			printf("\e[0m");
+			printf("\x1B[0m");
 		}
 
 		void set_blue() {
-			printf("\e[34m");
+			printf("\x1B[34m");
 		}
 
 		void set_cyan() {
-			printf("\e[36m");
+			printf("\x1B[36m");
 		}
 
 		void set_grey() {
-			printf("\e[37m");
+			printf("\x1B[37m");
 		}
 
 		void set_red() {
-			printf("\e[31m");
+			printf("\x1B[31m");
 		}
 
 		void set_yellow() {
-			printf("\e[33m");
+			printf("\x1B[33m");
 		}
 	};
 #endif

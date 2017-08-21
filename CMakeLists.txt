@@ -45,6 +45,7 @@ endif()
 if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     # Any Clang/GCC/ICC (including mingw which is currently unsupported)
 
+    # TODO: add -pedantic when Reflector is ready
     target_compile_options(${BINARY} PUBLIC
             -Wall
             -Wextra
@@ -67,7 +68,10 @@ if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     if (WITH_V8)
         if (APPLE)
             #file(GLOB_RECURSE V8_LIBS ${V8_LIB}/lib*.dylib)
-            set(V8_LIBS ${V8_LIB}/libv8_libplatform.a ${V8_LIB}/libv8_libbase.a ${V8_LIB}/libv8.dylib)
+            set(V8_LIBS
+                    ${V8_LIB}/libv8.dylib
+                    ${V8_LIB}/libv8_libplatform.dylib
+                    )
         else()
             if (SYSTEM_V8)
                 if (NOT STATIC_V8)
