@@ -31,6 +31,7 @@ target_compile_definitions(${BINARY} PUBLIC
 
 target_include_directories(${BINARY} PUBLIC src
     dependencies/asio/asio/include
+    ${PROJECT_SOURCE_DIR}/dependencies/GSL/include
     dependencies/rapidjson/include
     dependencies/reflector/include
     dependencies/websocketpp

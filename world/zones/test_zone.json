@@ -22,18 +22,45 @@
                 "normalOffsetBias": 0.01,
                 "shadowResolution": 2048
             },
-            "pos": [-5, 5, 10]
+            "pos": [20, 0, 10]
         }
     },
 
-    "props": [
-        {
-            "model": "world/zones/test_zone/castlewall.obj",
-            "pos": [-5, -5, 0]
-        },
-        {
-            "model": "world/zones/test_zone/castlewall.obj",
-            "pos": [-3, -5, 0]
-        }
-    ]
+  "props": [
+    {
+      "model": "world/zones/test_zone/castlewall",
+      "pos": [ -8, -10, 0 ]
+    },
+    {
+      "model": "world/zones/test_zone/castlewall",
+      "pos": [ -4, -10, 0 ]
+    },
+    {
+      "model": "world/zones/test_zone/castlewall",
+      "pos": [ 0, -10, 0 ]
+    },
+    {
+      "model": "world/zones/test_zone/castlewall",
+      "pos": [ 4, -10, 0 ]
+    },
+    {
+      "model": "world/zones/test_zone/castlewall",
+      "pos": [ 8, -10, 0 ]
+    },
+    {
+      "model": "world/zones/test_zone/castlewall",
+      "pos": [ 10, -8, 0 ],
+      "rotation": 90
+    },
+    {
+      "model": "world/zones/test_zone/castlewall",
+      "pos": [ 10, -4, 0 ],
+      "rotation": 90
+    },
+    {
+      "model": "world/zones/test_zone/castlewall",
+      "pos": [ 10, 0, 0 ],
+      "rotation": 90
+    }
+  ]
 }

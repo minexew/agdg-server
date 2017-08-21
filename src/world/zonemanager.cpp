@@ -9,6 +9,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace agdg {
     // TODO: this will be moved, of course
@@ -33,8 +34,25 @@ namespace agdg {
         const SHA3_224& get_hash() override { return hash;  }
 
     private:
+        SHA3_224 process_prop_model(IContentManager* content_mgr, const std::string& path) {
+            // Assume MagicaVoxel .obj for now
+            // We need to collect .obj, .mtl & .png
+
+            // FIXME: refactor
+            auto last_of = path.find_last_of('/');
+            auto filename = last_of != path.npos ? path.substr(last_of + 1) : path;
+
+            std::pair<std::string, std::string> paths[] {
+                {path + ".obj", filename + ".obj"},
+                {path + ".mtl", filename + ".mtl"},
+                {path + ".png", filename + ".png"},
+            };
+
+            return content_mgr->put_overlay(paths);
+        }
+
         void resolve_dependencies(IContentManager* content_mgr, rapidjson::Document& d) {
-            auto dependencies_json = rapidjson::Value(rapidjson::kArrayType);
+            std::unordered_set<SHA3_224> depencencies;
 
             const auto& props = d.FindMember("props");
 
@@ -45,14 +63,21 @@ namespace agdg {
                     if (prop.IsObject()) {                                                  // TODO: json_format_silent_failure
                         std::string path;
                         if (getString(prop, "model", path)) {
-                            auto hash = content_mgr->put_asset(path);
+                            auto hash = process_prop_model(content_mgr, path);
                             auto hash_str = HashUtils::hash_to_hex_string(hash);
 
                             prop.FindMember("model")->value.SetString(hash_str.c_str(), hash_str.size(), d.GetAllocator());
-                            dependencies_json.PushBack(rapidjson::Value(hash_str.c_str(), hash_str.size(), d.GetAllocator()), d.GetAllocator());
+                            depencencies.emplace(hash);
                         }
                     }
                 }
+            }
+
+            auto dependencies_json = rapidjson::Value(rapidjson::kArrayType);
+
+            for (const auto& hash : depencencies) {
+                auto hash_str = HashUtils::hash_to_hex_string(hash);
+                dependencies_json.PushBack(rapidjson::Value(hash_str.c_str(), hash_str.size(), d.GetAllocator()), d.GetAllocator());
             }
 
             d.AddMember("dependencies", std::move(dependencies_json), d.GetAllocator());

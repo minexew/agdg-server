@@ -96,7 +96,7 @@ class DialogueParser {
         print('parsing', filename);
 
         var file = realm.loadFileAsString(filename);
-        this.lines = file.split('\n');
+        this.lines = file.split('\n').map(s => s.replace('\r', ''));
         this.lineNo = 0;
 
         var indent = 0;

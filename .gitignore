@@ -1,4 +1,7 @@
 /.idea/
 /cmake-build-debug/
+/dependencies/depot_tools/
+/dependencies/v8/
+/dependencies/.*
 /vsxproj/
 *.bin

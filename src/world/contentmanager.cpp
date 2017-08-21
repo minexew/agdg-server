@@ -34,7 +34,7 @@ namespace agdg {
 #endif
 
     static void put_file_contents(const std::string& path, const uint8_t* bytes, size_t length) {
-        std::ofstream ofs(path);
+        std::ofstream ofs(path, std::ios::binary);
 
         if (!ofs.good())
             throw std::runtime_error("failed to open " + path + " for writing");
@@ -75,9 +75,30 @@ namespace agdg {
 
         SHA3_224 put_asset(const std::string& path) override {
             // TODO: cache, etc etc etc
-            std::string contents = FileUtils::get_contents(path);
+            std::vector<uint8_t> contents;
+            FileUtils::get_contents(path, contents);
 
             return put(reinterpret_cast<const uint8_t*>(contents.data()), contents.size(), true);
+        }
+
+        SHA3_224 put_overlay(gsl::span<std::pair<std::string, std::string>> paths) override {
+            rapidjson::StringBuffer buf;
+            rapidjson::Writer<rapidjson::StringBuffer> wr(buf);
+
+            wr.StartObject();
+            for (auto& pair : paths) {
+                auto local_path = pair.first;
+                auto path_in_overlay = pair.second;
+
+                auto hash = this->put_asset(local_path);
+                auto hash_str = HashUtils::hash_to_hex_string(hash);
+
+                wr.Key(path_in_overlay.c_str());
+                wr.String(hash_str.data(), hash_str.size(), true);
+            }
+            wr.EndObject();
+
+            return put((const uint8_t*)buf.GetString(), buf.GetSize(), true);
         }
 
     protected:
