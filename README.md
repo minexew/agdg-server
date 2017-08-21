@@ -35,29 +35,19 @@ You'll need to have Python in your `$PATH`. On Windows, you can use the one from
 
 As of 2017/08, V8's build system is fucked again, and if you want a static build, you'll need to edit `v8/gni/v8.gni` to `v8_static_library = true`.
 
-## Mac
-TODO: update 2017
-```
-# at time of writing (2016/04) V8 will default to libstdc++
-# force it to use libc++ instead which we need for C++14 support
-export CXX="`which clang++` -std=c++11 -stdlib=libc++"
-export LINK="`which clang++` -std=c++11 -stdlib=libc++"
-export GYP_DEFINES="clang=1 mac_deployment_target=10.8"
-make -j4 library=shared x64.release
-```
-## Linux
+## Linux/Mac
 
 ```
 gn gen out.gn/x64.release --args='is_debug=false target_cpu="x64" is_component_build=false v8_static_library=true'
-ninja -j 4 -C out.gn/x64.release
+ninja -j 4 -C out.gn/x64.release v8
 ```
 
 ## Windows
 Visual Studio 2015 + Debugging Tools for Windows is currently required by V8. The codebase actually supports 2017 now, but `v8/gypfiles/vs_toolchain.py` must be manually updated by copying from Chromium repo.
 
 ```
-gn gen out.gn/x64.optdebug --args='target_cpu="x64" is_component_build=false v8_static_library=true'
-ninja -C out.gn/x64.optdebug
+gn gen out.gn/x64.optdebug --args='v8_optimized_debug=true target_cpu="x64" is_component_build=false v8_static_library=true'
+ninja -C out.gn/x64.optdebug v8
 ```
 
 Building V8 in Debug mode is of course possible as well. Do note, however, that a Debug build of V8 will take a few gigabytes on disk.
