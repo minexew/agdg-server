@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
-project(agdg_server)
+project(agdg-server)
 
 set(SANITIZER OFF CACHE BOOL "Enable -fsanitize=address")
 set(STATIC_RUNTIME OFF CACHE BOOL "Link runtime libraries statically")
