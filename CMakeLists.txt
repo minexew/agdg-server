@@ -84,11 +84,13 @@ if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
                     set(V8_LIBS
                             libv8_base.a
                             libv8_external_snapshot.a
-                            libv8_libbase.a
                             libv8_libplatform.a
-                            libicui18n
-                            libicuuc
-                            libicudata
+                            libv8_libbase.a
+                            icui18n
+                            icuuc
+                            icudata
+                            dl
+                            rt
                             )
                 endif()
             else()
@@ -103,8 +105,8 @@ if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
                     set(V8_LIBS
                             ${V8_LIB}/obj/libv8_base.a
                             ${V8_LIB}/obj/libv8_external_snapshot.a
-                            ${V8_LIB}/obj/libv8_libbase.a
                             ${V8_LIB}/obj/libv8_libplatform.a
+                            ${V8_LIB}/obj/libv8_libbase.a
                             ${V8_LIB}/obj/third_party/icu/libicui18n.a
                             ${V8_LIB}/obj/third_party/icu/libicuuc.a
                             ${V8_LIB}/obj/third_party/icu/libicudata.a
