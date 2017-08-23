@@ -20,5 +20,5 @@
       "listenPort": "9003"
     }
   },
-  "contentOutputDir": "content"
+  "contentOutputDir": "agdg-client/dist/content"
 }
