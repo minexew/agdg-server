@@ -16,17 +16,17 @@ before_install:
   - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" = "g++" ]; then export CC=gcc-6; fi
   - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" = "g++" ]; then export CXX=g++-6; fi
 
-  - cd dependencies
-  - git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
-  - export PATH=`pwd`/depot_tools:"$PATH"
-  - fetch v8
-  - cd v8
-  - git checkout tags/6.0.286.55
-  - gclient sync
-  # Investigate v8_enable_i18n_support=false
-  - gn gen out.gn/x64.release --args='is_debug=false target_cpu="x64" is_component_build=true symbol_level=0'
-  - ninja -C out.gn/x64.release v8
-  - cd ../..
+  - if [ $WITH_V8 == 1 ]; then cd dependencies; fi
+  - if [ $WITH_V8 == 1 ]; then git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git; fi
+  - if [ $WITH_V8 == 1 ]; then export PATH=`pwd`/depot_tools:"$PATH"; fi
+  - if [ $WITH_V8 == 1 ]; then fetch v8; fi
+  - if [ $WITH_V8 == 1 ]; then cd v8; fi
+  - if [ $WITH_V8 == 1 ]; then git checkout tags/6.0.286.55; fi
+  - if [ $WITH_V8 == 1 ]; then gclient sync; fi
+  - if [ $WITH_V8 == 1 ] && [ $STATIC_V8 == 0 ]; then gn gen out.gn/x64.release --args='is_debug=false target_cpu="x64" is_component_build=true symbol_level=0'; fi
+  - if [ $WITH_V8 == 1 ] && [ $STATIC_V8 == 1 ]; then gn gen out.gn/x64.release --args='is_debug=false target_cpu="x64" is_component_build=false v8_static_library=true symbol_level=0'; fi
+  - if [ $WITH_V8 == 1 ]; then ninja -C out.gn/x64.release v8; fi
+  - if [ $WITH_V8 == 1 ]; then cd ../..; fi
 script: cmake -DSTATIC_V8=$STATIC_V8 -DWITH_V8=$WITH_V8 -DSYSTEM_V8=0 . && make -j2 VERBOSE=1
 compiler:
   - clang
