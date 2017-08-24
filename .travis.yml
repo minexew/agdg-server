@@ -27,13 +27,17 @@ before_install:
   - gn gen out.gn/x64.release --args='is_debug=false target_cpu="x64" is_component_build=true symbol_level=0'
   - ninja -C out.gn/x64.release v8
   - cd ../..
-script: cmake -DSTATIC_V8=0 -DWITH_V8=1 -DSYSTEM_V8=0 . && make -j2 VERBOSE=1
+script: cmake -DSTATIC_V8=$STATIC_V8 -DWITH_V8=$WITH_V8 -DSYSTEM_V8=0 . && make -j2 VERBOSE=1
 compiler:
   - clang
   - gcc
 os:
   - linux
   - osx
+env:
+  - WITH_V8=0
+  - WITH_V8=1 STATIC_V8=0
+  - WITH_V8=1 STATIC_V8=1
 
 # OS X build on travis takes too long and will probably fail because of that
 matrix:
