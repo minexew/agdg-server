@@ -5,7 +5,6 @@
 #include <realm/realm.hpp>
 #include <realm/zoneinstance.hpp>
 #include <utility/fileutils.hpp>
-#include <v8scripting/bindingutils.hpp>
 
 namespace agdg {
     class EntityDOMImpl : public EntityDOM {
