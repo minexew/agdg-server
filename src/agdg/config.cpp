@@ -18,7 +18,7 @@ namespace agdg {
         std::ofstream dst(dstName, std::ios::binary);
 
         if (!dst.good())
-            throw std::runtime_error((std::string) "can't open " + srcName + " for writing");
+            throw std::runtime_error((std::string) "can't open " + dstName + " for writing");
 
         dst << src.rdbuf();
     }
