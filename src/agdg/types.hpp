@@ -36,3 +36,7 @@ namespace std {
         }
     };
 }
+
+namespace rapidjson {
+    typedef ::std::size_t SizeType;
+}

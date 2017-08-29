@@ -24,7 +24,7 @@ namespace agdg {
             auto array = v8::Local<v8::Array>::Cast(js_value);
 
             for (int i = 0; i < 3; i++)
-                value_out.xyz[i] = array->Get(i)->NumberValue();
+                value_out.xyz[i] = static_cast<float>(array->Get(i)->NumberValue());
 
             return true;
         }

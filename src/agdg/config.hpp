@@ -1,5 +1,6 @@
 #pragma once
 
+#include <agdg/types.hpp>
 #include <rapidjson/document.h>
 
 #include <functional>

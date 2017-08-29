@@ -27,6 +27,7 @@ add_executable(${BINARY} ${sources})
 
 target_compile_definitions(${BINARY} PUBLIC
         ASIO_STANDALONE
+        RAPIDJSON_NO_SIZETYPEDEFINE
         )
 
 target_include_directories(${BINARY} PUBLIC src

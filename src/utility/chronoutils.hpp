@@ -24,7 +24,13 @@ namespace agdg {
             time_t t = std::chrono::system_clock::to_time_t(tp);
 
             std::ostringstream oss;
+#ifdef _WIN32
+            std::tm tm;
+            localtime_s(&tm, &t);
+            oss << std::put_time(&tm, iso8601_format);
+#else
             oss << std::put_time(localtime(&t), iso8601_format);
+#endif
             return oss.str();
         }
 
@@ -32,7 +38,13 @@ namespace agdg {
             time_t t = std::chrono::system_clock::to_time_t(tp);
 
             std::ostringstream oss;
+#ifdef _WIN32
+            std::tm tm;
+            localtime_s(&tm, &t);
+            oss << std::put_time(&tm, date_format);
+#else
             oss << std::put_time(localtime(&t), date_format);
+#endif
             return oss.str();
         }
     };
