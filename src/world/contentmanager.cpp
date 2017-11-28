@@ -13,14 +13,33 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#else
+#include <sys/types.h>
+#include <sys/stat.h>
 #endif
 
 namespace agdg {
 #ifdef _WIN32
+    // FIXME: Unicode, recursion, forward slashes
+    static void ensure_directory_exists(const char* path) {
+        BOOL ok = CreateDirectoryA(path, NULL);
+
+        if (!ok && GetLastError() != ERROR_ALREADY_EXISTS)
+            throw std::runtime_error(std::string("failed to create directory ") + path);
+    }
+
+    // FIXME: Unicode, forward slashes
     static bool file_exists(const char* path) {
         return GetFileAttributesA(path) != INVALID_FILE_ATTRIBUTES;
     }
 #else
+    static void ensure_directory_exists(const char* path) {
+        bool ok = 0 == mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
+        if (!ok && errno != EEXIST)
+            throw std::runtime_error(std::string("failed to create directory ") + path);
+    }
+
     static bool file_exists(const char* path) {
         FILE* file = fopen(path, "rb");
 
@@ -46,6 +65,7 @@ namespace agdg {
     public:
         ContentManager() {
             g_config->get_value(content_output_dir, "contentOutputDir");
+            ensure_directory_exists(content_output_dir.c_str());
         }
 
         //virtual std::string get_asset_as_string(const std::string& path) override;
